@@ -1,0 +1,22 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'br.karina.pet'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'br.karina.pet'
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName '0.1'
+        // Sem bibliotecas nativas: o mesmo APK roda em 32 bits (armeabi-v7a) e 64 bits.
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
