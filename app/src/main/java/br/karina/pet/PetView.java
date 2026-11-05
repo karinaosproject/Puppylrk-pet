@@ -112,7 +112,11 @@ public class PetView extends View {
         p.setTextAlign(Paint.Align.CENTER);
         p.setTextSize(Math.min(w, h) * 0.05f);
         c.drawText(pet.fala, cx, cy - r * 1.4f, p);
-
+        p.setTextAlign(Paint.Align.RIGHT);
+        p.setTextSize(Math.min(w, h) * 0.05f);
+        p.setColor(Color.WHITE);
+        c.drawText("Puppy", w * 0.95f, h * 0.07f, p);
+        
         // barras
         p.setTextAlign(Paint.Align.LEFT);
         p.setTextSize(Math.min(w, h) * 0.035f);
