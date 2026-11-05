@@ -11,7 +11,7 @@ public class Pet {
     public final Brain brain;
     public float fome = 0.3f, energia = 0.8f, alegria = 0.5f, raiva = 0f, vinculo = 0.1f;
     public int action = PASSEAR;
-    public String fala = "Oi!";
+    public String fala = "Oi, Eu sou o Puppy";
 
     private final float[] stim = new float[Brain.IN];
     private int ticksSinceTravessura = 999;
