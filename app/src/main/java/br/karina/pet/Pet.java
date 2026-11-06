@@ -11,7 +11,7 @@ public class Pet {
     public final Brain brain;
     public float fome = 0.3f, energia = 0.8f, alegria = 0.5f, raiva = 0f, vinculo = 0.1f;
     public int action = PASSEAR;
-    public String fala = "Oi, Eu sou o Puppy";
+    public String fala = "Oi, eu sou o Puppy!";
 
     private final float[] stim = new float[Brain.IN];
     private int ticksSinceTravessura = 999;
@@ -124,11 +124,26 @@ public class Pet {
         }
     }
 
+    /** Aplica o tempo que passou com o app fechado (bem mais devagar do que com o app aberto). */
+    public void passarTempo(long ms) {
+        if (ms <= 0L) return;
+        float horas = Math.min(ms, 48L * 3600000L) / 3600000f;
+        fome = c(fome + 0.08f * horas);
+        energia = c(energia + 0.15f * horas);
+        raiva = c(raiva - 1.0f * horas);
+        if (fome > 0.7f) alegria = c(alegria - 0.05f * horas);
+        alegria = c(alegria + (0.5f - alegria) * Math.min(1f, 0.2f * horas));
+        vinculo = c(vinculo - 0.003f * horas);
+        if (fome > 0.7f) fala = "Tô com fome!";
+        else if (horas >= 1f) fala = "Que saudade!";
+    }
+
     // ----- persistência -----
 
     public void save(SharedPreferences sp) {
         SharedPreferences.Editor e = sp.edit();
         e.putLong("seed", seed);
+        e.putLong("ultimaVez", System.currentTimeMillis());
         e.putString("estado", fome + "," + energia + "," + alegria + "," + raiva + "," + vinculo
                 + "," + brain.curiosidade + "," + brain.apego + "," + brain.rebeldia);
         e.putString("w1", join(brain.w1));
@@ -154,6 +169,8 @@ public class Pet {
             }
             fill(p.brain.w1, sp.getString("w1", null));
             fill(p.brain.w2, sp.getString("w2", null));
+            long antes = sp.getLong("ultimaVez", 0L);
+            if (antes > 0L) p.passarTempo(System.currentTimeMillis() - antes);
         } catch (Exception ignored) {
             // se algo estiver corrompido, o pet começa do zero
         }
