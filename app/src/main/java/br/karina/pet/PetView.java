@@ -37,7 +37,16 @@ public class PetView extends View {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        retomar();
+    }
+
+    public void retomar() {
+        removeCallbacks(loop);
         post(loop);
+    }
+
+    public void pausar() {
+        removeCallbacks(loop);
     }
 
     @Override
