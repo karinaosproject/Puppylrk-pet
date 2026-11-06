@@ -9,17 +9,20 @@ import android.widget.LinearLayout;
 
 public class MainActivity extends Activity {
     private Pet pet;
+    private PetView view;
     private SharedPreferences sp;
+    private long pausadoEm = 0L;
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         sp = getSharedPreferences("pet", MODE_PRIVATE);
         pet = Pet.load(sp);
+        view = new PetView(this, pet);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.addView(new PetView(this, pet),
+        root.addView(view,
                 new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         LinearLayout barra = new LinearLayout(this);
@@ -44,7 +47,16 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (pausadoEm > 0L) pet.passarTempo(System.currentTimeMillis() - pausadoEm);
+        view.retomar();
+    }
+
+    @Override
     protected void onPause() {
+        pausadoEm = System.currentTimeMillis();
+        view.pausar();
         pet.save(sp);
         super.onPause();
     }
