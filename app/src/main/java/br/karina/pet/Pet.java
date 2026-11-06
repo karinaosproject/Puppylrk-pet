@@ -37,7 +37,7 @@ public class Pet {
         if (action == DORMIR) energia = c(energia + 0.004f);
         else energia = c(energia - 0.0004f);
         alegria = c(alegria + (0.5f - alegria) * 0.002f - (fome > 0.7f ? 0.0008f : 0f));
-        raiva *= 0.995f;
+        raiva *= 0.995f; brain.rebeldia = c(brain.rebeldia + (0.4f - brain.rebeldia) * 0.0002f);
         for (int i = 0; i < 4; i++) stim[i] *= 0.85f;
         stim[4] = fome;
         stim[5] = 1f - energia;
