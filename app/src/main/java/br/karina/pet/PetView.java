@@ -55,15 +55,21 @@ public class PetView extends View {
         super.onDetachedFromWindow();
     }
 
-    private void move() {
+        private void move() {
+        float h = Math.max(1f, getHeight());
+        float r = Math.min(getWidth(), h) * 0.15f;
+        // mantém o Puppy abaixo das barras e acima do fim da tela
+        float minY = (h * 0.24f + r * 2.7f) / h;
+        float maxY = Math.max(minY + 0.02f, (h - r * 3.3f) / h);
         boolean chegou = Math.abs(x - tx) < 0.02f && Math.abs(y - ty) < 0.02f;
         if (chegou || Math.random() < 0.03) {
             tx = 0.3f + (float) Math.random() * 0.4f;
-            ty = 0.42f + (float) Math.random() * 0.2f;
+            ty = minY + (float) Math.random() * (maxY - minY);
         }
         float v = pet.action == Pet.DORMIR ? 0f : (pet.action == Pet.TRAVESSURA ? 0.08f : 0.025f);
         x += (tx - x) * v;
         y += (ty - y) * v;
+        if (y < minY) y = minY;
     }
 
     @Override
