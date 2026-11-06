@@ -124,6 +124,10 @@ public class Pet {
         }
     }
 
+
+    public void dizer(String s) {
+        fala = s;
+    }
         public void aprendeu(String assunto) {
         alegria = c(alegria + 0.15f);
         vinculo = c(vinculo + 0.01f);
