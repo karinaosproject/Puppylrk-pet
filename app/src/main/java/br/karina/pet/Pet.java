@@ -124,6 +124,13 @@ public class Pet {
         }
     }
 
+        public void aprendeu(String assunto) {
+        alegria = c(alegria + 0.15f);
+        vinculo = c(vinculo + 0.01f);
+        brain.curiosidade = c(brain.curiosidade + 0.01f);
+        fala = "Aprendi: " + assunto;
+        }
+
     /** Aplica o tempo que passou com o app fechado (bem mais devagar do que com o app aberto). */
     public void passarTempo(long ms) {
         if (ms <= 0L) return;
