@@ -7,17 +7,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.ScrollView;
-
-import java.net.URL;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
     private Pet pet;
     private PetView view;
-    private SharedPreferences sp;
-    private SharedPreferences sk;
+    private SharedPreferences sp;   // estado do pet
+    private SharedPreferences sk;   // conhecimento
+    private SharedPreferences sd;   // diário
     private TextView info;
+    private ScrollView rolagem;
     private EditText entrada;
     private long pausadoEm = 0L;
 
@@ -26,6 +26,7 @@ public class MainActivity extends Activity {
         super.onCreate(b);
         sp = getSharedPreferences("pet", MODE_PRIVATE);
         sk = getSharedPreferences("conhecimento", MODE_PRIVATE);
+        sd = getSharedPreferences("diario", MODE_PRIVATE);
         pet = Pet.load(sp);
         view = new PetView(this, pet);
 
@@ -34,26 +35,27 @@ public class MainActivity extends Activity {
         root.addView(view,
                 new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
-                info = new TextView(this);
+        info = new TextView(this);
         info.setTextColor(0xFFB0B8C8);
         info.setTextSize(13);
         info.setPadding(24, 8, 24, 8);
-        info.setText("Digite um assunto: o Puppy pesquisa na Wikipédia e guarda o que aprendeu.");
-        ScrollView rolagem = new ScrollView(this);
+        info.setText("Fale com o Puppy. Tente: clima, notícias, aprender sobre <assunto> ou ajuda.");
+        rolagem = new ScrollView(this);
         rolagem.setBackgroundColor(0xFF10131E);
         rolagem.addView(info);
         int altura = (int) (getResources().getDisplayMetrics().density * 130);
         root.addView(rolagem, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, altura));
+
         LinearLayout linha = new LinearLayout(this);
         linha.setOrientation(LinearLayout.HORIZONTAL);
         entrada = new EditText(this);
-        entrada.setHint("Assunto...");
+        entrada.setHint("Fale com o Puppy...");
         entrada.setSingleLine(true);
         entrada.setTextColor(0xFFFFFFFF);
         entrada.setHintTextColor(0xFF808898);
         linha.addView(entrada, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2f));
-        linha.addView(botao("Aprender", () -> aprender()));
-        linha.addView(botao("Notícias", () -> noticias()));
+        linha.addView(botao("Enviar", () -> enviar()));
+        linha.addView(botao("Diário", () -> mostrarDiario()));
         root.addView(linha, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -78,56 +80,28 @@ public class MainActivity extends Activity {
         return bt;
     }
 
-    private void aprender() {
-        final String termo = entrada.getText().toString().trim();
-        if (termo.isEmpty()) return;
-        info.setText("Pesquisando \"" + termo + "\"...");
-        new Thread(() -> {
-            String msg;
-            String aprendido = null;
-            try {
-                String[] r = Conhecimento.wikipedia(termo);
-                if (r == null || r[1].isEmpty()) {
-                    msg = "Não encontrei nada sobre \"" + termo + "\".";
-                } else {
-                    Conhecimento.guardar(sk, "Wikipédia", r[0], r[1], r[2]);
-                    aprendido = r[0];
-                    msg = r[0] + ": " + r[1] + "\n(Fonte: Wikipédia, CC BY-SA)";
-                }
-            } catch (Exception e) {
-                msg = "Sem conexão ou erro: " + e.getMessage();
-            }
-            final String m = msg;
-            final String a = aprendido;
-            runOnUiThread(() -> {
-                info.setText(m);
-                if (a != null) pet.aprendeu(a);
-            });
-        }).start();
+    private void mostrarDiario() {
+        info.setText(Diario.ler(sd));
+        rolagem.scrollTo(0, 0);
     }
 
-    private void noticias() {
-        info.setText("Buscando manchetes...");
+    private void enviar() {
+        final String cmd = entrada.getText().toString().trim();
+        if (cmd.isEmpty()) return;
+        entrada.setText("");
+        if (Skills.norm(cmd).equals("diario")) {
+            mostrarDiario();
+            return;
+        }
+        info.setText("Pensando...");
         new Thread(() -> {
-            StringBuilder sb = new StringBuilder();
-            int novos = 0;
-            for (String feed : Conhecimento.FEEDS) {
-                try {
-                    String fonte = new URL(feed).getHost();
-                    for (String[] it : Conhecimento.manchetes(feed, 5)) {
-                        Conhecimento.guardar(sk, fonte, it[0], "", it[1]);
-                        sb.append("• ").append(it[0]).append("\n");
-                        novos++;
-                    }
-                } catch (Exception e) {
-                    sb.append("(não consegui ler: ").append(feed).append(")\n");
-                }
-            }
-            final String m = sb.length() == 0 ? "Nada encontrado." : sb.toString();
-            final int n = novos;
+            Skills.Resposta r = Skills.executar(cmd, sk);
             runOnUiThread(() -> {
-                info.setText(m);
-                if (n > 0) pet.aprendeu("as notícias de hoje");
+                info.setText(r.texto);
+                rolagem.scrollTo(0, 0);
+                if (r.fala != null) pet.dizer(r.fala);
+                if (r.aprendeu != null) pet.aprendeu(r.aprendeu);
+                Diario.registrar(sd, r.diario);
             });
         }).start();
     }
@@ -135,7 +109,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (pausadoEm > 0L) pet.passarTempo(System.currentTimeMillis() - pausadoEm);
+        if (pausadoEm > 0L) {
+            long ms = System.currentTimeMillis() - pausadoEm;
+            pet.passarTempo(ms);
+            if (ms >= 10 * 60000L) {
+                Diario.registrar(sd, "Você voltou depois de " + (ms / 60000L) + " min");
+            }
+        }
         view.retomar();
     }
 
