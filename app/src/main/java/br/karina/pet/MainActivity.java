@@ -34,15 +34,16 @@ public class MainActivity extends Activity {
         root.addView(view,
                 new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        info = new TextView(this);
+                info = new TextView(this);
         info.setTextColor(0xFFB0B8C8);
         info.setTextSize(13);
         info.setPadding(24, 8, 24, 8);
-        info.setMaxLines(12);
         info.setText("Digite um assunto: o Puppy pesquisa na Wikipédia e guarda o que aprendeu.");
-        root.addView(info, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
+        ScrollView rolagem = new ScrollView(this);
+        rolagem.setBackgroundColor(0xFF10131E);
+        rolagem.addView(info);
+        int altura = (int) (getResources().getDisplayMetrics().density * 130);
+        root.addView(rolagem, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, altura));
         LinearLayout linha = new LinearLayout(this);
         linha.setOrientation(LinearLayout.HORIZONTAL);
         entrada = new EditText(this);
