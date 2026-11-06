@@ -82,7 +82,7 @@ public class Pet {
     public void carinho() {
         stim[0] = 1f;
         alegria = c(alegria + 0.25f);
-        vinculo = c(vinculo + 0.02f);
+        vinculo = c(vinculo + 0.02f * (1f - vinculo));
         raiva *= 0.5f;
         fala = "Gostei!";
         consequencia(+1f);
