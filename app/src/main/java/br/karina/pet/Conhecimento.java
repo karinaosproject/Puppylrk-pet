@@ -33,7 +33,7 @@ public class Conhecimento {
         return con.getInputStream();
     }
 
-    private static String texto(String u) throws Exception {
+     static String texto(String u) throws Exception {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(abrir(u), "UTF-8"))) {
             StringBuilder sb = new StringBuilder();
             String l;
