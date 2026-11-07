@@ -111,7 +111,7 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 - [x] Obter do aparelho a lista real de ABIs e propriedades Zygote pelo Termux. Resultado: sistema do Galaxy A01 opera como `zygote32`, ABI primária `armeabi-v7a`, sem ABI 64-bit anunciada.
 - [ ] Manter o build Java do Puppy compatível com 32 e 64 bits; não introduzir filtro nativo que exclua `armeabi-v7a`.
 - [ ] Fixar uma versão/release do MNN somente depois de confirmar artefatos LLM para cada ABI suportada.
-- [ ] Confirmar build nativa LLM em `armeabi-v7a` e `arm64-v8a` separadamente. A build 32-bit é obrigatória para o requisito do produto; a 64-bit não pode substituir o suporte 32-bit.
+- [ ] Executar e validar a build oficial `MNN_BUILD_LLM=ON` para `armeabi-v7a` e `arm64-v8a` separadamente, incluindo inspeção dos artefatos gerados. A build 32-bit é obrigatória para o requisito do produto; a 64-bit não pode substituir o suporte 32-bit.
 - [ ] Verificar a licença do checkpoint exato e a compatibilidade de formato/quantização com a versão do MNN.
 - [ ] Fazer protótipos mínimos isolados para as ABIs 32 e 64 bits, carregando o modelo e medindo memória/desempenho antes de alterar o fluxo principal do chat.
 - [ ] Testar no Galaxy A01 que o APK 32-bit instala, abre, conversa pelas Skills e continua utilizável sem bibliotecas/modelo LLM.
