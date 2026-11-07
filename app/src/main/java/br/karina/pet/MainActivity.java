@@ -96,7 +96,8 @@ public class MainActivity extends Activity {
 
         LinearLayout palco = new LinearLayout(this);
         palco.setOrientation(LinearLayout.VERTICAL);
-        palco.setBackground(gradiente(new int[]{Color.argb(220, 25, 42, 73), Color.argb(205, 13, 22, 43), Color.argb(230, 25, 24, 57)}, dp(25)));\n        palco.setElevation(dp(8));
+        palco.setBackground(gradiente(new int[]{Color.argb(220, 25, 42, 73), Color.argb(205, 13, 22, 43), Color.argb(230, 25, 24, 57)}, dp(25)));
+        palco.setElevation(dp(8));
         palco.setClipToOutline(true);
         palco.addView(view, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -138,7 +139,8 @@ public class MainActivity extends Activity {
         TextView enviar = texto("ENVIAR  ↑", 10, Color.rgb(5, 17, 29), true);
         enviar.setGravity(Gravity.CENTER);
         enviar.setLetterSpacing(0.04f);
-        enviar.setBackground(gradiente(new int[]{Color.rgb(124, 232, 255), Color.rgb(84, 177, 255)}, dp(14)));\n        enviar.setElevation(dp(5));
+        enviar.setBackground(gradiente(new int[]{Color.rgb(124, 232, 255), Color.rgb(84, 177, 255)}, dp(14)));
+        enviar.setElevation(dp(5));
         LinearLayout.LayoutParams enviarLp = new LinearLayout.LayoutParams(dp(88), dp(48));
         enviarLp.leftMargin = dp(8);
         composer.addView(enviar, enviarLp);
@@ -213,7 +215,22 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private GradientDrawable vidro(int cor, int raio, int borda) {\n        GradientDrawable d = new GradientDrawable();\n        d.setColor(cor);\n        d.setCornerRadius(raio);\n        d.setStroke(dp(1), borda);\n        return d;\n    }\n\n    private GradientDrawable gradiente(int[] cores, int raio) {\n        GradientDrawable d = new GradientDrawable(GradientDrawable.Orientation.TL_BR, cores);\n        d.setCornerRadius(raio);\n        d.setStroke(dp(1), Color.argb(125, 121, 171, 225));\n        return d;\n    }\n\n    private GradientDrawable fundo(int cor, int raio, int borda) {
+    private GradientDrawable vidro(int cor, int raio, int borda) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(cor);
+        d.setCornerRadius(raio);
+        d.setStroke(dp(1), borda);
+        return d;
+    }
+
+    private GradientDrawable gradiente(int[] cores, int raio) {
+        GradientDrawable d = new GradientDrawable(GradientDrawable.Orientation.TL_BR, cores);
+        d.setCornerRadius(raio);
+        d.setStroke(dp(1), Color.argb(125, 121, 171, 225));
+        return d;
+    }
+
+    private GradientDrawable fundo(int cor, int raio, int borda) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(cor);
         d.setCornerRadius(raio);
