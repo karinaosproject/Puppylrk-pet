@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18">
+<title>Puppy · Painel do projeto</title>
+<style>
+:root{color-scheme:dark;--bg:#080b14;--panel:#111827;--panel2:#151f31;--line:#25334a;--text:#eef4ff;--muted:#9aabc3;--cyan:#62d8ff;--green:#5de0a0;--yellow:#ffce70;--red:#ff7d86;--purple:#a99aff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -10%,#182b49 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:28px 20px 70px}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}.brand{display:flex;gap:14px;align-items:center}.orb{width:54px;height:54px;border-radius:18px;background:linear-gradient(145deg,#ffbd4a,#ff6b32 55%,#a94dff);box-shadow:0 0 35px #ff8a3d55;display:grid;place-items:center;font-size:28px}.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}.brand h1{margin:2px 0;font-size:26px;letter-spacing:-.04em}.sub{color:var(--muted);font-size:13px}.link{color:var(--cyan);text-decoration:none}.link:hover{text-decoration:underline}
+.hero{margin:30px 0 20px;padding:28px;border:1px solid #2c4562;border-radius:22px;background:linear-gradient(120deg,#13243a,#101827 60%,#201b39);display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center}.hero h2{font-size:clamp(24px,4vw,38px);line-height:1.1;margin:7px 0 10px;letter-spacing:-.04em}.hero p{color:#b6c6da;max-width:650px;margin:0}.version{border:1px solid #405978;background:#0c1727;border-radius:16px;padding:15px 19px;text-align:center;min-width:110px}.version strong{font-size:25px;display:block}.version span{font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:16px 0 28px}.metric,.card{border:1px solid var(--line);background:linear-gradient(160deg,#121c2c,#0e1522);border-radius:17px;padding:18px}.metric small{color:var(--muted);display:block}.metric strong{font-size:28px;letter-spacing:-.04em}.metric em{font-size:11px;color:var(--muted);font-style:normal}
+.section{margin-top:28px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}.section h2{font-size:20px;margin:0;letter-spacing:-.02em}.section-head p{color:var(--muted);font-size:12px;margin:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card h3{font-size:15px;margin:0 0 13px}.items{display:grid;gap:10px}.item{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #202d40}.item:last-child{border:0;padding-bottom:0}.dot{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:none}.done{background:var(--green);box-shadow:0 0 12px #5de0a055}.todo{background:var(--yellow)}.risk{background:var(--red)}.item b{display:block;font-size:13px}.item span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.tag{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-radius:20px;padding:3px 8px;margin-left:6px;background:#19372f;color:var(--green)}.tag.todo{background:#3b2e19;color:var(--yellow)}.tag.risk{background:#3d2028;color:var(--red)}
+.progressbox{padding:18px;border:1px solid var(--line);background:#0e1624;border-radius:17px}.progressline{height:9px;background:#263247;border-radius:10px;overflow:hidden;margin:10px 0}.progressline i{display:block;width:65%;height:100%;background:linear-gradient(90deg,#47d8bd,#64baff);border-radius:10px}.progressmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:11px 9px;border-bottom:1px solid #253247}th{color:var(--muted);font-weight:600}td:last-child{color:var(--muted)}
+.note{border-left:3px solid var(--red);background:#25151d;padding:14px 16px;border-radius:0 12px 12px 0;color:#e9c6cb;font-size:13px}.note b{color:#ff9da5}
+.footer{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.version{justify-self:start}.wrap{padding:20px 14px 50px}}
+@media(max-width:390px){.grid{grid-template-columns:1fr 1fr}.metric{padding:13px}.metric strong{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+ <div class="brand"><div class="orb">🔥</div><div><div class="eyebrow">Project overview / Android</div><h1>Puppy · Meu Pet</h1><div class="sub">Painel de implementação e próximos passos</div></div></div>
+ <a class="link" href="https://github.com/karinaosproject/Puppylrk-pet" target="_blank" rel="noopener">Abrir repositório ↗</a>
+</header>
+<section class="hero">
+ <div><div class="eyebrow">Status da revisão do código</div><h2>Um pet virtual com comportamento próprio.</h2><p>O aplicativo já tem mascote animado, necessidades, emoções, rede neural pulsada, interações, diário e habilidades conectadas a serviços externos. Esta página separa o que está presente no código do que ainda precisa ser validado ou construído.</p></div>
+ <div class="version"><strong>0.1</strong><span>VERSÃO DECLARADA</span></div>
+</section>
+<section class="grid">
+ <div class="metric"><small>Arquivos Java centrais</small><strong>8</strong><em>Classes do pacote br.karina.pet</em></div>
+ <div class="metric"><small>Recursos principais</small><strong>10+</strong><em>Implementados no código</em></div>
+ <div class="metric"><small>Automação de build</small><strong>1</strong><em>Workflow GitHub Actions</em></div>
+ <div class="metric"><small>Licença</small><strong>—</strong><em>Ainda não definida</em></div>
+</section>
+<section class="section">
+ <div class="section-head"><h2>Visão geral do progresso</h2><p>Leitura qualitativa da árvore de código, não percentual de testes aprovados.</p></div>
+ <div class="progressbox"><div class="progressmeta"><span>Base funcional já presente</span><b>Implementação parcial</b></div><div class="progressline"><i></i></div><div class="progressmeta"><span>App, lógica do pet, habilidades e build</span><span>Validação em dispositivo pendente</span></div></div>
+</section>
+<section class="section">
+ <div class="section-head"><h2>O que já foi feito</h2><p>Encontrado nos arquivos da branch main</p></div>
+ <div class="cols">
+  <div class="card"><h3>🐾 Pet e experiência</h3><div class="items">
+   <div class="item"><i class="dot done"></i><div><b>Mascote animado</b><span>Canvas, movimento, partículas, órbitas e animações.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Humor visual</b><span>Cores e expressões variam com alegria, raiva, sono e ações.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Necessidades e emoções</b><span>Fome, energia, alegria, raiva e vínculo.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Interações</b><span>Carinho, comida, brincadeira e bronca; toque no mascote também dá carinho.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Ações autônomas</b><span>Passear, brincar, travessura, dormir e pedir comida.</span></div></div>
+  </div></div>
+  <div class="card"><h3>🧠 Inteligência e recursos</h3><div class="items">
+   <div class="item"><i class="dot done"></i><div><b>Rede neural pulsada</b><span>6 entradas, 12 neurônios ocultos e 4 saídas.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Aprendizado por recompensa</b><span>Ajuste de pesos com recompensa/punição após travessuras.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Persistência local</b><span>Estado e pesos armazenados em SharedPreferences.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Diário</b><span>Histórico local limitado a 200 registros.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Habilidades online</b><span>Clima Open-Meteo, RSS BBC/G1 e resumos da Wikipédia.</span></div></div>
+  </div></div>
+ </div>
+</section>
+<section class="section">
+ <div class="section-head"><h2>O que precisa ser feito</h2><p>Backlog sugerido por prioridade</p></div>
+ <div class="card"><div class="items">
+  <div class="item"><i class="dot risk"></i><div><b>1. Corrigir exposição da chave de debug <span class="tag risk">Urgente</span></b><span>debug-signing.keystore.b64 está versionado publicamente. Remover do repositório/histórico conforme necessário, gerar uma nova chave debug e nunca usar essa chave em release.</span></div></div>
+  <div class="item"><i class="dot todo"></i><div><b>2. Adicionar Gradle Wrapper <span class="tag todo">Alta</span></b><span>Versionar gradlew e gradle/wrapper para builds locais reproduzíveis.</span></div></div>
+  <div class="item"><i class="dot todo"></i><div><b>3. Criar testes automatizados <span class="tag todo">Alta</span></b><span>Testar evolução de fome/energia, decisões, recompensa neural, persistência e parser de comandos.</span></div></div>
+  <div class="item"><i class="dot todo"></i><div><b>4. Validar em aparelhos reais <span class="tag todo">Alta</span></b><span>Testar instalação, estabilidade, consumo de bateria, rotação/orientação e compatibilidade Android 8+ em 32/64 bits.</span></div></div>
+  <div class="item"><i class="dot todo"></i><div><b>5. Melhorar tolerância a falhas de rede</b><span>Mensagens claras, cache, tratamento de timeout e estados sem conexão para clima, RSS e Wikipédia.</span></div></div>
+  <div class="item"><i class="dot todo"></i><div><b>6. Evoluir interface e acessibilidade</b><span>Configurações, controles mais claros, tamanhos adaptáveis, TalkBack e feedback visual das ações.</span></div></div>
+  <div class="item"><i class="dot todo"></i><div><b>7. Preparar distribuição release</b><span>Configuração de assinatura privada, versionamento, build release e processo de atualização.</span></div></div>
+  <div class="item"><i class="dot todo"></i><div><b>8. Definir licença e privacidade</b><span>Escolher uma licença, documentar dados locais e informar os serviços externos acessados.</span></div></div>
+ </div></div>
+</section>
+<section class="section">
+ <div class="section-head"><h2>Mapa do código</h2><p>Responsabilidade de cada classe principal</p></div>
+ <div class="card"><table><thead><tr><th>Arquivo</th><th>Responsabilidade</th></tr></thead><tbody>
+ <tr><td>Pet.java</td><td>Estado, necessidades, emoções, decisões e persistência.</td></tr>
+ <tr><td>PetView.java</td><td>Desenho, animação, indicadores e toque.</td></tr>
+ <tr><td>Brain.java</td><td>Rede neural pulsada e recompensa.</td></tr>
+ <tr><td>Skills.java</td><td>Interpretação de comandos e coordenação de habilidades.</td></tr>
+ <tr><td>Conhecimento.java</td><td>Wikipédia, RSS e armazenamento de conhecimento.</td></tr>
+ <tr><td>Clima.java</td><td>Geocodificação e previsão via Open-Meteo.</td></tr>
+ <tr><td>Diario.java</td><td>Registro e leitura do diário.</td></tr>
+ <tr><td>MainActivity.java</td><td>Interface, eventos e ciclo de vida Android.</td></tr>
+ </tbody></table></div>
+</section>
+<section class="section">
+ <div class="section-head"><h2>Build e distribuição</h2></div>
+ <div class="cols">
+  <div class="card"><h3>Configuração identificada</h3><div class="items">
+   <div class="item"><i class="dot done"></i><div><b>Java 17</b><span>Configurado no workflow e nas opções de compilação.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Android Gradle Plugin 8.7.3</b><span>Declarado no build.gradle da raiz.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Gradle 8.13</b><span>Configurado no GitHub Actions.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Min SDK 26 / Compile SDK 34</b><span>Configuração atual do app.</span></div></div>
+  </div></div>
+  <div class="card"><h3>Como baixar o APK de CI</h3><div class="items">
+   <div class="item"><i class="dot done"></i><div><b>Workflow APK debug</b><span>Disparado em push ou manualmente.</span></div></div>
+   <div class="item"><i class="dot done"></i><div><b>Artifact meu-pet-apk</b><span>Publicado pelo passo upload-artifact.</span></div></div>
+   <div class="item"><i class="dot todo"></i><div><b>Release assinada</b><span>Não confundir o APK debug com uma versão pronta para distribuição pública.</span></div></div>
+  </div></div>
+ </div>
+</section>
+<section class="section"><div class="note"><b>Atenção de segurança:</b> o arquivo de chave de debug codificado em Base64 está no repositório público. Base64 não é criptografia. Trate essa chave como exposta; gere outra chave para debug e mantenha a chave de release fora do Git.</div></section>
+<footer class="footer"><span>Gerado a partir da inspeção estática da branch main.</span><span>Última revisão documental: 06/11/2026 · <a class="link" href="https://github.com/karinaosproject/Puppylrk-pet/actions">GitHub Actions ↗</a></span></footer>
+</div>
+</body>
+</html>
