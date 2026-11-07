@@ -12,7 +12,7 @@ O exemplo oficial MNN Chat para Android **não pode ser copiado diretamente para
 - O `CMakeLists.txt` do exemplo pressupõe uma árvore completa do repositório MNN e liga contra uma biblioteca MNN compilada em `project/android/build_64`.
 - O projeto do Puppy é Java 17, minSdk 26 e atualmente não possui NDK/CMake nem bibliotecas nativas.
 
-O repositório MNN possui também `project/android/build_32.sh`, que seleciona `armeabi-v7a`, mas o script genérico não demonstra por si só que a configuração completa de LLM está habilitada e testada nessa ABI. Precisamos compilar com as opções LLM adequadas, confirmar os artefatos gerados e executar inferência real.
+O repositório MNN possui `project/android/build_32.sh`, e foi inspecionado também o script unificado oficial `build_lib.sh`. Esse script configura explicitamente uma build `armeabi-v7a` com `-DMNN_BUILD_LLM=ON`, `-DMNN_LOW_MEMORY=ON` e `-DMNN_ARM82=OFF`; em seguida configura uma segunda build `arm64-v8a`, também com `-DMNN_BUILD_LLM=ON`. Isso melhora substancialmente a viabilidade técnica para ambas as ABIs. Ainda é necessário executar as builds, inspecionar os `.so` gerados, compilar a camada JNI do Puppy para cada ABI e validar inferência no dispositivo.
 
 ## Evidências oficiais e referências
 
@@ -73,7 +73,9 @@ Para diagnosticar a ABI do processo do Puppy com precisão numa futura build de 
 
 ## Critérios de aprovação no Galaxy A01
 
-- Build de bibliotecas nativas para a ABI real do app concluído.
+- Build das bibliotecas MNN-LLM para `armeabi-v7a` concluída e artefatos inspecionados.
+- Build das bibliotecas MNN-LLM para `arm64-v8a` concluída e artefatos inspecionados.
+- Camada JNI e APK compilados para cada ABI, sem misturar bibliotecas 32/64-bit.
 - APK de diagnóstico instala e inicia sem afetar o app de referência.
 - Modelo carrega sem crash ou OOM.
 - Geração de texto funciona por várias interações consecutivas.
@@ -83,4 +85,4 @@ Para diagnosticar a ABI do processo do Puppy com precisão numa futura build de 
 
 ## Limitações atuais
 
-A ABI do sistema foi informada pelo usuário via Termux, mas não houve compilação NDK/CMake, instalação de APK nativo, inferência real nem medição de memória/temperatura. Nenhum arquivo nativo ou dependência MNN foi adicionado ao app nesta fase. O suporte de 32 bits é requisito obrigatório, mas ainda precisa ser provado para o runtime LLM; se a inferência não for viável no A01, o app continuará funcional em 32 bits com as Skills existentes. O suporte de 64 bits será entregue em variante própria e não substituirá o caminho de 32 bits. Não declarar Qwen funcional até passar nos critérios acima.
+A ABI do sistema foi informada pelo usuário via Termux. A inspeção do script unificado upstream `build_lib.sh` encontrou configurações explícitas de `MNN_BUILD_LLM=ON` para `armeabi-v7a` e `arm64-v8a`, mas ainda não houve compilação NDK/CMake, instalação de APK nativo, inferência real nem medição de memória/temperatura. Nenhum arquivo nativo ou dependência MNN foi adicionado ao app nesta fase. O suporte de 32 bits é requisito obrigatório, mas ainda precisa ser provado para o runtime LLM; se a inferência não for viável no A01, o app continuará funcional em 32 bits com as Skills existentes. O suporte de 64 bits será entregue em variante própria e não substituirá o caminho de 32 bits. Não declarar Qwen funcional até passar nos critérios acima.
