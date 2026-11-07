@@ -228,7 +228,14 @@ public class MainActivity extends Activity {
         }
         info.setText("O Puppy está pensando...");
         new Thread(() -> {
-            Skills.Resposta r = Skills.executar(cmd, sk);
+            String respostaLlm = LlamaRuntime.responder(this, cmd);
+            Skills.Resposta r;
+            if (respostaLlm == null || respostaLlm.trim().isEmpty()) {
+                r = Skills.executar(cmd, sk);
+            } else {
+                r = new Skills.Resposta();
+                r.texto = respostaLlm.trim();
+            }
             runOnUiThread(() -> {
                 info.setText(r.texto);
                 rolagem.scrollTo(0, 0);
