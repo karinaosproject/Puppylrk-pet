@@ -10,6 +10,7 @@ debugKey.bytes = java.util.Base64.decoder.decode(rootProject.file('debug-signing
 android {
     namespace 'br.karina.pet'
     compileSdk 34
+    ndkVersion '27.2.12479018'
 
     signingConfigs {
         debug {
@@ -26,7 +27,20 @@ android {
         targetSdk 34
         versionCode 1
         versionName '0.1'
-        // Sem bibliotecas nativas: o mesmo APK roda em 32 bits (armeabi-v7a) e 64 bits.
+        ndk { abiFilters 'armeabi-v7a' }
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++17'
+                arguments '-DANDROID_STL=c++_shared'
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
     }
 
     compileOptions {
