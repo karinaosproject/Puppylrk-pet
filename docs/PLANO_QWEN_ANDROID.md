@@ -23,14 +23,16 @@
 - A integração do Qwen e do MNN **ainda não foi implementada**.
 - **Validação manual recente:** o usuário informou que atualizou/instalou o APK atual no Galaxy A01 e que ficou tudo certo. Isso confirma a validação prática relatada para a versão atual, mas não substitui testes automatizados ou medições de desempenho do futuro LLM.
 - **Pesquisa de integração MNN-LLM:** o código oficial Android foi inspecionado em nível de README, Gradle, CMake, JNI e wrapper Kotlin. O exemplo oficial atual fixa ABI `arm64-v8a`; o MNN também mantém um script genérico `build_32.sh` para `armeabi-v7a`, mas ainda não foi confirmado que a configuração LLM completa compile e funcione nessa ABI.
-- **Compatibilidade do Galaxy A01:** fontes públicas indicam Snapdragon 439 e 2 GB RAM; um catálogo de dispositivos aponta `armeabi-v7a` como ABI primária. Isso é apenas indício: precisamos ler as propriedades do telefone e a ABI real do processo Puppy antes de selecionar bibliotecas.
+- **Compatibilidade real informada pelo usuário (Termux, Galaxy A01):** `ro.product.cpu.abilist=armeabi-v7a,armeabi`, `ro.product.cpu.abilist32=armeabi-v7a,armeabi`, `ro.product.cpu.abilist64` sem valor informado, `ro.zygote=zygote32`, `ro.product.cpu.abi=armeabi-v7a` e `ro.build.version.sdk=32` (Android 12). A evidência disponível caracteriza este sistema instalado como ambiente de 32 bits; não presumir que ele consiga carregar bibliotecas `arm64-v8a`.
 
 ## Decisão técnica
 
 - Modelo principal planejado: família Qwen3.
 - Execução pretendida: inteiramente local no Android, sem API proprietária obrigatória.
 - Runtime inicial a avaliar: MNN-LLM (Apache-2.0), que possui suporte a Qwen3 e integração Android.
-- Runtime alternativo futuro: llama.cpp, caso os testes de compatibilidade, desempenho, tamanho ou manutenção indiquem vantagem.
+- Runtime alternativo: llama.cpp, caso os testes de compatibilidade, desempenho, tamanho ou manutenção indiquem vantagem.
+- **Requisito obrigatório de arquitetura:** o Puppy deve continuar instalável e funcional em Android ARM de 32 bits (`armeabi-v7a`). Também deve oferecer suporte a ARM 64 bits (`arm64-v8a`) em aparelhos compatíveis. A implementação nativa será compilada separadamente para cada ABI; nunca incluir uma `.so` de 64 bits no caminho de execução de um processo de 32 bits.
+- A ausência ou falha do runtime/modelo em qualquer ABI não pode impedir a inicialização do app nem remover as Skills atuais. Em 32 bits, se a inferência local não for tecnicamente viável, o Puppy permanece funcional sem LLM.
 - O modelo deve ser baixado sob demanda; não embutir pesos grandes no APK.
 - O primeiro candidato para avaliação é Qwen3-0.6B, sujeito à verificação da licença e do formato/quantização exatos disponíveis para o runtime escolhido.
 
@@ -40,7 +42,7 @@ Consulta à documentação oficial do repositório MNN, especialmente o README d
 
 - A integração Android oficial constrói bibliotecas nativas com Android NDK; não é correto presumir que basta adicionar uma dependência Java/Gradle.
 - O README oficial consultado indica NDK `27.2.12479018` para o aplicativo de exemplo e mostra a compilação da biblioteca MNN antes da construção do app.
-- O exemplo oficial MNN Chat consultado fixa `abiFilters "arm64-v8a"` e seu CMake aponta para uma biblioteca MNN compilada em `project/android/build_64`. O repositório MNN possui `project/android/build_32.sh` para `armeabi-v7a`, mas esse script genérico não comprova sozinho uma build de LLM pronta e validada em 32 bits.
+- O exemplo oficial MNN Chat consultado fixa `abiFilters "arm64-v8a"` e seu CMake aponta para uma biblioteca MNN compilada em `project/android/build_64`. O repositório MNN possui script de build `build_32.sh` e rotinas de build para ARMv7, mas isso não comprova sozinho que todos os componentes MNN-LLM, JNI e kernels necessários estejam prontos e validados em 32 bits. A ABI `armeabi-v7a` permanece um gate de aprovação obrigatório.
 - O release MNN `3.6.2` publica um pacote Android com bibliotecas `armv7` e `armv8`, mas o nome do pacote não comprova que todos os componentes MNN-LLM/JNI usados pelo app estejam incluídos. Não tratar esse pacote genérico como runtime LLM sem inspecionar seus artefatos.
 - A documentação oficial alerta que o aplicativo MNN Chat foi testado em aparelhos topo de linha (OnePlus 13 e Xiaomi 14 Ultra) e que aparelhos modestos podem ficar lentos, instáveis ou não conseguir carregar modelos.
 - O README registra suporte a Qwen3 no aplicativo MNN Chat a partir da versão 0.4.0. Isso comprova suporte da aplicação/ecossistema, mas ainda não comprova que um checkpoint específico Qwen3-0.6B em formato específico funciona no aparelho do usuário.
@@ -57,20 +59,36 @@ Referências oficiais consultadas:
 - MNN engine Android notes: https://github.com/alibaba/MNN/wiki/engine
 - Relatório de compatibilidade do aparelho: `docs/VALIDACAO_MNN_GALAXY_A01.md`
 
+## Requisito de compatibilidade 32/64 bits
+
+O requisito do produto foi confirmado pelo usuário: **o Puppy deve funcionar em 32 bits e também oferecer uma build para 64 bits**. O Galaxy A01 é o aparelho de referência obrigatório para o caminho 32-bit. Os valores enviados pelo usuário no Termux foram:
+
+- `ro.product.cpu.abilist`: `armeabi-v7a,armeabi`
+- `ro.product.cpu.abilist32`: `armeabi-v7a,armeabi`
+- `ro.product.cpu.abilist64`: vazio/não informado
+- `ro.zygote`: `zygote32`
+- `ro.product.cpu.abi`: `armeabi-v7a`
+- `ro.build.version.sdk`: `32` (Android 12)
+
+A implementação deve manter o núcleo Java independente de ABI e compilar qualquer biblioteca JNI separadamente para `armeabi-v7a` e `arm64-v8a`. O app deve escolher/carregar apenas a biblioteca compatível com o processo instalado. Preferir APKs separados por ABI ou App Bundle/splits para reduzir tamanho; um APK universal só será usado se todos os artefatos nativos de ambas as ABIs estiverem presentes e forem compatíveis. Não forçar `arm64-v8a` como ABI única.
+
+O NDK do Android documenta suporte a `armeabi-v7a` e `arm64-v8a`, e o CMake recebe uma ABI por configuração de build. Isso viabiliza builds separadas do app, mas **não garante** que cada runtime de LLM tenha suporte funcional em ambas. (Referência: https://developer.android.com/ndk/guides/abis)
+
 ## Restrição do aparelho de desenvolvimento
 
-O aparelho de referência é um Samsung Galaxy A01 (Android 12, ARM, hardware de entrada). A documentação do aplicativo Android do MNN alerta que seus testes foram feitos em aparelhos topo de linha e que dispositivos modestos podem apresentar lentidão, instabilidade ou falha ao carregar modelos.
+O aparelho de referência é um Samsung Galaxy A01 (Android 12, ARM de 32 bits no sistema instalado, hardware de entrada). A documentação do aplicativo Android do MNN alerta que seus testes foram feitos em aparelhos topo de linha e que dispositivos modestos podem apresentar lentidão, instabilidade ou falha ao carregar modelos.
 
-Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor checkpoint Qwen3 disponível que tenha licença explicitamente compatível, preferir quantização suportada pelo runtime e medir memória, tempo de carregamento, velocidade de geração, temperatura e estabilidade. Se o modelo não couber ou ficar inutilizável, manter o Puppy funcional sem LLM e oferecer a execução local em aparelho mais potente como opção futura. Não prometer desempenho antes de testar no aparelho real.
+Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor checkpoint Qwen3 disponível que tenha licença explicitamente compatível, preferir quantização suportada pelo runtime e medir memória, tempo de carregamento, velocidade de geração, temperatura e estabilidade. Se o modelo não couber ou ficar inutilizável em 32 bits, manter o Puppy funcional sem LLM nessa ABI; a versão 64 bits poderá oferecer inferência local quando o dispositivo tiver recursos suficientes. Não prometer desempenho antes de testar no aparelho real.
 
 ## Arquitetura planejada
 
 1. **AssistantEngine**: interface independente do fornecedor/runtime para enviar contexto e receber texto/ações estruturadas.
-2. **QwenMnnEngine**: implementação inicial que integra Qwen3 via MNN-LLM. Deve poder ser substituída sem reescrever a interface, memória ou ferramentas.
-3. **AssistantOrchestrator**: organiza contexto, histórico, instruções, chamadas de ferramentas e validação dos resultados.
-4. **ToolRegistry**: catálogo explícito de ferramentas disponíveis (clima, notícias, Wikipédia, calculadora, arquivos e ações Android autorizadas).
-5. **MemoryStore**: memória local, com controles de visualização, limpeza e retenção.
-6. **SafetyGate**: valida cada ação antes de executá-la. O modelo nunca recebe execução direta de shell, acesso irrestrito à rede ou permissão para alterar permissões do Android.
+2. **RuntimeSelector**: detecta a ABI do processo e seleciona somente uma implementação nativa compatível; se nenhuma estiver disponível, retorna modo sem LLM sem interromper o app.
+3. **QwenMnnEngine**: implementação inicial que integra Qwen3 via MNN-LLM. Deve poder ser substituída sem reescrever a interface, memória ou ferramentas.
+4. **AssistantOrchestrator**: organiza contexto, histórico, instruções, chamadas de ferramentas e validação dos resultados.
+5. **ToolRegistry**: catálogo explícito de ferramentas disponíveis (clima, notícias, Wikipédia, calculadora, arquivos e ações Android autorizadas).
+6. **MemoryStore**: memória local, com controles de visualização, limpeza e retenção.
+7. **SafetyGate**: valida cada ação antes de executá-la. O modelo nunca recebe execução direta de shell, acesso irrestrito à rede ou permissão para alterar permissões do Android.
 
 ## Regras de segurança
 
@@ -90,11 +108,13 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 - [x] Inspecionar README, Gradle, CMake, JNI e wrapper Kotlin do exemplo oficial MNN Chat.
 - [x] Identificar os requisitos documentados do exemplo: NDK `27.2.12479018`, CMake `3.22.1`, build nativa e ABI `arm64-v8a` no Gradle atual.
 - [x] Identificar a existência de um script genérico MNN para `armeabi-v7a`; a build LLM nessa ABI continua sem validação.
-- [ ] Obter do aparelho a lista real de ABIs (`ro.product.cpu.abilist`, `abilist32`, `abilist64`) e confirmar a ABI do processo do Puppy.
-- [ ] Fixar uma versão/release do MNN somente depois de confirmar artefatos LLM para a ABI necessária.
-- [ ] Confirmar a build nativa LLM em 32 bits, caso o Puppy execute como `armeabi-v7a`, ou usar arm64 se o processo puder e for configurado para isso.
+- [x] Obter do aparelho a lista real de ABIs e propriedades Zygote pelo Termux. Resultado: sistema do Galaxy A01 opera como `zygote32`, ABI primária `armeabi-v7a`, sem ABI 64-bit anunciada.
+- [ ] Manter o build Java do Puppy compatível com 32 e 64 bits; não introduzir filtro nativo que exclua `armeabi-v7a`.
+- [ ] Fixar uma versão/release do MNN somente depois de confirmar artefatos LLM para cada ABI suportada.
+- [ ] Confirmar build nativa LLM em `armeabi-v7a` e `arm64-v8a` separadamente. A build 32-bit é obrigatória para o requisito do produto; a 64-bit não pode substituir o suporte 32-bit.
 - [ ] Verificar a licença do checkpoint exato e a compatibilidade de formato/quantização com a versão do MNN.
-- [ ] Fazer um protótipo mínimo isolado para carregar o modelo e medir consumo de memória e desempenho no A01, antes de alterar o fluxo principal do chat.
+- [ ] Fazer protótipos mínimos isolados para as ABIs 32 e 64 bits, carregando o modelo e medindo memória/desempenho antes de alterar o fluxo principal do chat.
+- [ ] Testar no Galaxy A01 que o APK 32-bit instala, abre, conversa pelas Skills e continua utilizável sem bibliotecas/modelo LLM.
 
 ### Etapa 2 — Integração do motor local
 
@@ -122,8 +142,9 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 
 ## Critérios mínimos antes de considerar concluído
 
-- [ ] APK compila para as ABIs selecionadas.
-- [ ] App abre e continua funcionando sem modelo baixado.
+- [ ] APK 32-bit (`armeabi-v7a`) compila, instala e abre no Galaxy A01.
+- [ ] APK 64-bit (`arm64-v8a`) compila e abre em um dispositivo Android 64-bit de teste.
+- [ ] App abre e continua funcionando sem modelo baixado, em ambas as variantes.
 - [ ] Inferência não bloqueia a interface.
 - [ ] Falha de carregamento não fecha o app.
 - [ ] Ferramentas rejeitam argumentos inválidos e ações não autorizadas.
@@ -134,4 +155,4 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 
 ## Observação sobre status
 
-As caixas de seleção acima representam trabalho pendente. A pesquisa documental e inspeção do código oficial estão concluídas, mas não houve build NDK/CMake, instalação de APK nativo, consulta ADB ao aparelho ou inferência real. O exemplo oficial de chat está configurado apenas para `arm64-v8a`, enquanto o Galaxy A01 pode estar executando apps de 32 bits. Antes de mexer no APK principal, precisamos confirmar a ABI real e provar que o runtime LLM compila para ela. Consulte `docs/VALIDACAO_MNN_GALAXY_A01.md` para o diagnóstico e os comandos.
+As caixas de seleção acima representam trabalho pendente. O usuário confirmou por Termux que o Galaxy A01 usa ambiente de 32 bits (`zygote32`, `armeabi-v7a`) e solicitou suporte de produto para 32 e 64 bits, com 32 bits como requisito essencial. A pesquisa documental e inspeção do código oficial estão concluídas, mas não houve build NDK/CMake, instalação de APK nativo ou inferência real. O próximo gate é provar builds nativas separadas e comportamento de fallback. Consulte `docs/VALIDACAO_MNN_GALAXY_A01.md` para o diagnóstico.
