@@ -9,6 +9,7 @@ public final class LlamaRuntime {
     private static final int CONTEXT_SIZE = 384;
     private static final int THREADS = 2;
     private static boolean libraryLoaded;
+    private static String loadedModelPath;
 
     static {
         try {
@@ -25,13 +26,18 @@ public final class LlamaRuntime {
         if (!libraryLoaded || prompt == null || prompt.trim().isEmpty()) return null;
         File model = new File(new File(context.getFilesDir(), "models"), MODEL_FILE);
         if (!model.isFile() || model.length() < 1024 * 1024) return null;
-        if (!nativeLoadModel(model.getAbsolutePath(), CONTEXT_SIZE, THREADS)) return null;
+        if (!model.getAbsolutePath().equals(loadedModelPath)) {
+            if (!nativeLoadModel(model.getAbsolutePath(), CONTEXT_SIZE, THREADS)) return null;
+            loadedModelPath = model.getAbsolutePath();
+        }
         try {
-            return nativeGenerate(prompt, 64);
+            String system = "Você é Puppy, um assistente pessoal útil, claro e seguro. Responda em português brasileiro. Não afirme que executou ações externas.\n";
+            String chat = "<|im_start|>system\n" + system + "<|im_end|>\n"
+                    + "<|im_start|>user\n" + prompt + "<|im_end|>\n"
+                    + "<|im_start|>assistant\n";
+            return nativeGenerate(chat, 64);
         } catch (OutOfMemoryError | RuntimeException error) {
             return null;
-        } finally {
-            nativeUnload();
         }
     }
 
