@@ -3,6 +3,8 @@ package br.karina.pet;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.Intent;
+import android.net.Uri;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -31,6 +33,8 @@ public class MainActivity extends Activity {
     private ScrollView rolagem;
     private EditText entrada;
     private long pausadoEm = 0L;
+    private static final int REQ_MODELO = 741;
+    private TextView modeloStatus;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -78,7 +82,17 @@ public class MainActivity extends Activity {
         diario.setContentDescription("Abrir diário do Puppy");
         diario.setFocusable(true);
         header.addView(diario);
+
+        TextView modelo = texto("MODELO", 9, AZUL, true);
+        modelo.setPadding(dp(10), dp(10), 0, dp(10));
+        modelo.setOnClickListener(v -> selecionarModelo());
+        modelo.setContentDescription("Instalar modelo de inteligência artificial");
+        header.addView(modelo);
         root.addView(header);
+
+        modeloStatus = texto(LlamaRuntime.status(this), 9, SUAVE, false);
+        modeloStatus.setPadding(dp(3), 0, dp(3), dp(7));
+        root.addView(modeloStatus);
 
         LinearLayout palco = new LinearLayout(this);
         palco.setOrientation(LinearLayout.VERTICAL);
@@ -211,6 +225,36 @@ public class MainActivity extends Activity {
         return (int) (valor * getResources().getDisplayMetrics().density + 0.5f);
     }
 
+    private void selecionarModelo() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_TITLE, "Selecione o modelo Qwen3 GGUF");
+        startActivityForResult(intent, REQ_MODELO);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQ_MODELO || resultCode != RESULT_OK || data == null || data.getData() == null) return;
+        Uri uri = data.getData();
+        modeloStatus.setText("Copiando modelo para o Puppy...");
+        new Thread(() -> {
+            String resultado;
+            try {
+                LlamaRuntime.importarModelo(this, uri);
+                resultado = LlamaRuntime.status(this);
+            } catch (Exception e) {
+                resultado = "Falha ao importar: " + (e.getMessage() == null ? "erro de leitura" : e.getMessage());
+            }
+            final String mensagem = resultado;
+            runOnUiThread(() -> {
+                modeloStatus.setText(mensagem);
+                info.setText(mensagem);
+            });
+        }).start();
+    }
+
     private void mostrarDiario() {
         info.setText(Diario.ler(sd));
         rolagem.scrollTo(0, 0);
@@ -226,6 +270,7 @@ public class MainActivity extends Activity {
             mostrarDiario();
             return;
         }
+        modeloStatus.setText(LlamaRuntime.status(this));
         info.setText("O Puppy está pensando...");
         new Thread(() -> {
             String respostaLlm = LlamaRuntime.responder(this, cmd);
@@ -238,6 +283,7 @@ public class MainActivity extends Activity {
             }
             runOnUiThread(() -> {
                 info.setText(r.texto);
+                modeloStatus.setText(LlamaRuntime.status(this));
                 rolagem.scrollTo(0, 0);
                 if (r.fala != null) pet.dizer(r.fala);
                 if (r.aprendeu != null) pet.aprendeu(r.aprendeu);
