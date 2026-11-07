@@ -22,6 +22,8 @@
 - A classe `Pet` e a rede neural comportamental `Brain` cuidam do comportamento/animação do mascote. Essa rede não é um LLM.
 - A integração do Qwen e do MNN **ainda não foi implementada**.
 - **Validação manual recente:** o usuário informou que atualizou/instalou o APK atual no Galaxy A01 e que ficou tudo certo. Isso confirma a validação prática relatada para a versão atual, mas não substitui testes automatizados ou medições de desempenho do futuro LLM.
+- **Pesquisa de integração MNN-LLM:** o código oficial Android foi inspecionado em nível de README, Gradle, CMake, JNI e wrapper Kotlin. O exemplo oficial atual fixa ABI `arm64-v8a`; o MNN também mantém um script genérico `build_32.sh` para `armeabi-v7a`, mas ainda não foi confirmado que a configuração LLM completa compile e funcione nessa ABI.
+- **Compatibilidade do Galaxy A01:** fontes públicas indicam Snapdragon 439 e 2 GB RAM; um catálogo de dispositivos aponta `armeabi-v7a` como ABI primária. Isso é apenas indício: precisamos ler as propriedades do telefone e a ABI real do processo Puppy antes de selecionar bibliotecas.
 
 ## Decisão técnica
 
@@ -38,15 +40,22 @@ Consulta à documentação oficial do repositório MNN, especialmente o README d
 
 - A integração Android oficial constrói bibliotecas nativas com Android NDK; não é correto presumir que basta adicionar uma dependência Java/Gradle.
 - O README oficial consultado indica NDK `27.2.12479018` para o aplicativo de exemplo e mostra a compilação da biblioteca MNN antes da construção do app.
-- O exemplo de compilação consultado está orientado a `arm64-v8a`; precisamos verificar separadamente o suporte e a distribuição de bibliotecas para `armeabi-v7a` antes de decidir quais ABIs o Puppy vai empacotar.
+- O exemplo oficial MNN Chat consultado fixa `abiFilters "arm64-v8a"` e seu CMake aponta para uma biblioteca MNN compilada em `project/android/build_64`. O repositório MNN possui `project/android/build_32.sh` para `armeabi-v7a`, mas esse script genérico não comprova sozinho uma build de LLM pronta e validada em 32 bits.
+- O release MNN `3.6.2` publica um pacote Android com bibliotecas `armv7` e `armv8`, mas o nome do pacote não comprova que todos os componentes MNN-LLM/JNI usados pelo app estejam incluídos. Não tratar esse pacote genérico como runtime LLM sem inspecionar seus artefatos.
 - A documentação oficial alerta que o aplicativo MNN Chat foi testado em aparelhos topo de linha (OnePlus 13 e Xiaomi 14 Ultra) e que aparelhos modestos podem ficar lentos, instáveis ou não conseguir carregar modelos.
 - O README registra suporte a Qwen3 no aplicativo MNN Chat a partir da versão 0.4.0. Isso comprova suporte da aplicação/ecossistema, mas ainda não comprova que um checkpoint específico Qwen3-0.6B em formato específico funciona no aparelho do usuário.
-- Ainda falta inspecionar e fixar uma versão/release do MNN e confirmar o caminho real de integração Java/JNI e o formato do modelo. Nenhuma API Java foi assumida ou implementada nesta etapa.
+- O wrapper oficial observado é Kotlin (`LlmSession.kt`) com métodos `external` JNI, enquanto o Puppy é Java. A integração pode ser feita via Java/JNI ou um pequeno módulo Kotlin, mas deve usar contratos e bibliotecas nativas compatíveis; não é uma dependência Java simples.
+- A última release consultada do MNN foi `3.6.2` (29/10/2026), mas ainda não foi escolhida como dependência do Puppy. Precisamos validar os artefatos LLM para a ABI do aparelho antes de fixar a versão.
+- Nenhuma API Java foi assumida ou implementada nesta etapa.
 
 Referências oficiais consultadas:
 - MNN Android LLM app: https://github.com/alibaba/MNN/blob/master/apps/Android/MnnLlmChat/README.md
 - MNN Android build workflow / NDK: https://github.com/alibaba/MNN/blob/master/.github/workflows/mnn_release.yml
+- MNN build 32-bit genérico: https://github.com/alibaba/MNN/blob/master/project/android/build_32.sh
+- MNN build 64-bit genérico: https://github.com/alibaba/MNN/blob/master/project/android/build_64.sh
+- MNN release 3.6.2: https://github.com/alibaba/MNN/releases/tag/3.6.2
 - MNN engine Android notes: https://github.com/alibaba/MNN/wiki/engine
+- Relatório de compatibilidade do aparelho: `docs/VALIDACAO_MNN_GALAXY_A01.md`
 
 ## Restrição do aparelho de desenvolvimento
 
@@ -78,10 +87,12 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 
 ### Etapa 1 — Base e compatibilidade
 
-- [ ] Fixar uma versão/release do MNN para evitar integração instável com a branch principal em movimento.
-- [ ] Inspecionar os exemplos e o código oficial do MNN-LLM para Android/Java/JNI; confirmar APIs reais antes de escrever o adaptador.
-- [ ] Confirmar requisitos de NDK, CMake, bibliotecas nativas, ABIs e versão mínima do Android.
-- [ ] Identificar as ABIs realmente disponíveis no Galaxy A01 e escolher a estratégia de empacotamento sem remover suporte existente sem justificativa.
+- [x] Inspecionar README, Gradle, CMake, JNI e wrapper Kotlin do exemplo oficial MNN Chat.
+- [x] Identificar os requisitos documentados do exemplo: NDK `27.2.12479018`, CMake `3.22.1`, build nativa e ABI `arm64-v8a` no Gradle atual.
+- [x] Identificar a existência de um script genérico MNN para `armeabi-v7a`; a build LLM nessa ABI continua sem validação.
+- [ ] Obter do aparelho a lista real de ABIs (`ro.product.cpu.abilist`, `abilist32`, `abilist64`) e confirmar a ABI do processo do Puppy.
+- [ ] Fixar uma versão/release do MNN somente depois de confirmar artefatos LLM para a ABI necessária.
+- [ ] Confirmar a build nativa LLM em 32 bits, caso o Puppy execute como `armeabi-v7a`, ou usar arm64 se o processo puder e for configurado para isso.
 - [ ] Verificar a licença do checkpoint exato e a compatibilidade de formato/quantização com a versão do MNN.
 - [ ] Fazer um protótipo mínimo isolado para carregar o modelo e medir consumo de memória e desempenho no A01, antes de alterar o fluxo principal do chat.
 
@@ -123,4 +134,4 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 
 ## Observação sobre status
 
-As caixas de seleção acima representam trabalho pendente. Os itens da seção “Já implementado” descrevem alterações presentes no histórico do repositório, mas não substituem uma compilação e testes no aparelho. A próxima atividade técnica é fixar uma versão do MNN e construir um protótipo isolado para validar as bibliotecas nativas e o carregamento do modelo.
+As caixas de seleção acima representam trabalho pendente. A pesquisa documental e inspeção do código oficial estão concluídas, mas não houve build NDK/CMake, instalação de APK nativo, consulta ADB ao aparelho ou inferência real. O exemplo oficial de chat está configurado apenas para `arm64-v8a`, enquanto o Galaxy A01 pode estar executando apps de 32 bits. Antes de mexer no APK principal, precisamos confirmar a ABI real e provar que o runtime LLM compila para ela. Consulte `docs/VALIDACAO_MNN_GALAXY_A01.md` para o diagnóstico e os comandos.
