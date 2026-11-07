@@ -4,7 +4,7 @@
 
 Branch de protótipo para testar llama.cpp no Galaxy A01 informado pelo usuário: Android 12, processo de 32 bits, ABI armeabi-v7a.
 
-**Ainda não validado por compilação nem em aparelho.** A documentação Android upstream mostra o exemplo NDK com arm64-v8a; o alvo ARMv7 aqui é experimental e só poderá ser declarado compatível após build e inferência reais.
+<badge> no markup: Build ARMv7 concluído com sucesso no GitHub Actions em 2026-11-07 (run #72). O passo de verificação confirmou `lib/armeabi-v7a/libpuppy_llama.so` no APK e ausência de ABIs de 64 bits inesperadas. **Ainda não validado em aparelho nem por inferência real.** A compilação comprova o empacotamento nativo; não comprova que o modelo carrega ou gera texto no Galaxy A01.
 
 ## Integração
 
@@ -21,9 +21,9 @@ Branch de protótipo para testar llama.cpp no Galaxy A01 informado pelo usuário
 - CPU; sem OpenMP, Vulkan, OpenCL ou KleidiAI.
 - Esses valores são apenas um ponto inicial e não garantem que o modelo caiba na RAM do Galaxy A01.
 
-## Build
+## Build e resultado confirmado
 
-O build usa Android NDK/CMake pelo Android Gradle Plugin. Esta branch deve gerar somente armeabi-v7a. O primeiro build precisa de internet para baixar o upstream.
+O build usa Android NDK 27.2.12479018 e CMake 3.22.1 pelo Android Gradle Plugin. A execução [GitHub Actions #72](https://github.com/karinaosproject/Puppylrk-pet/actions/runs/42327960594) compilou e publicou o artifact `puppy-armv7-llama-debug`. Os passos `Compilar APK ARMv7 com llama.cpp`, `Verificar ABI do APK` e `upload-artifact` terminaram com sucesso. O artifact tem SHA-256 `dba5737874cdd24fd9ad3d99a02ddef727f306137e3cd0f9e205f73fde480f84`. Esta confirmação é apenas de build e empacotamento.
 
 ## Validação obrigatória
 
