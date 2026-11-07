@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.22.1)
 project(puppy_llama LANGUAGES C CXX)
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
-FetchContent_Declare(llama_cpp
-  GIT_REPOSITORY https://github.com/ggml-org/llama.cpp.git
-  GIT_TAG v0.9.0
-  GIT_SHALLOW TRUE)
-FetchContent_MakeAvailable(llama_cpp)
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
@@ -17,6 +12,11 @@ set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
 set(GGML_OPENCL OFF CACHE BOOL "" FORCE)
 set(GGML_CPU_KLEIDIAI OFF CACHE BOOL "" FORCE)
 set(LLAMA_OPENSSL OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(llama_cpp
+  GIT_REPOSITORY https://github.com/ggml-org/llama.cpp.git
+  GIT_TAG v0.9.0
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(llama_cpp)
 add_library(puppy_llama SHARED llama_jni.cpp)
 target_compile_features(puppy_llama PRIVATE cxx_std_17)
 target_compile_options(puppy_llama PRIVATE -O2)
