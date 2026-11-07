@@ -197,3 +197,40 @@ Sugestões e correções podem ser enviadas por Issues e Pull Requests. Ao contr
 ## Licença
 
 Ainda não definida. Uma licença deve ser escolhida e adicionada ao repositório antes de estabelecer permissões de uso, modificação e redistribuição.
+
+
+## Interface glass futurista (branch experimental)
+
+A interface experimental recebeu uma atualização visual com tema **glass futurista**: fundo azul-marinho profundo, superfícies translúcidas simuladas, bordas finas azuladas, gradientes frios, realces ciano e detalhes violeta. O layout mantém o mascote como foco, com área de conversa, seletor de modelo e ações rápidas.
+
+![Prévia conceitual da interface glass do Puppy](docs/PUPPY_INTERFACE_GLASS.svg)
+
+> A imagem acima é uma prévia visual documentada do conceito. A renderização real depende das dimensões, densidade e versão do Android. O Android nativo não aplica blur de vidro real nesta implementação: o efeito é construído com transparências, gradientes, contornos e elevação para manter compatibilidade e desempenho no aparelho de entrada.
+
+### Diretrizes visuais
+
+- **Fundo:** azul-marinho quase preto com gradientes discretos.
+- **Painéis:** camadas azuladas semitransparentes, cantos arredondados e contornos de baixa intensidade.
+- **Destaque:** ciano para ações principais e estados ativos.
+- **Acentos:** violeta, coral e âmbar nos detalhes e nas ações do pet.
+- **Hierarquia:** nome e estado do Puppy no topo; mascote no palco central; sinal/resposta; campo de conversa; quatro ações rápidas.
+- **Acessibilidade:** rótulos textuais acompanham os ícones; botões continuam com áreas de toque amplas.
+
+## Integração experimental com Qwen3 / llama.cpp
+
+Na branch `feature/llama-armv7` existe uma integração opcional com llama.cpp v0.9.0 para executar um modelo GGUF localmente:
+
+- Biblioteca JNI `puppy_llama` compilada para `armeabi-v7a`.
+- Adaptador Java `LlamaRuntime` que carrega/descarrega o modelo e executa a geração fora da thread da interface.
+- Importador de arquivo GGUF pelo seletor de documentos do Android; cópia para armazenamento privado do aplicativo.
+- Modelo não é incluído no APK. Caminho privado usado pelo app: `files/models/qwen3-0.6b-q4_k_m.gguf`.
+- Se biblioteca ou modelo não estiverem disponíveis, o aplicativo mantém o fallback de Skills baseado em regras.
+- O status da interface distingue biblioteca indisponível, biblioteca pronta sem modelo e arquivo GGUF encontrado ainda não testado.
+
+### Build verificado desta branch
+
+A execução [GitHub Actions #72](https://github.com/karinaosproject/Puppylrk-pet/actions/runs/42327960594) concluiu com sucesso em 7 de novembro de 2026. O job executou a compilação nativa e a verificação do conteúdo do APK, incluindo a presença de `lib/armeabi-v7a/libpuppy_llama.so` e a ausência de ABIs de 64 bits inesperadas. O artifact publicado chama-se `puppy-armv7-llama-debug`.
+
+**Importante:** build bem-sucedido comprova a compilação e o empacotamento da biblioteca, não a inferência real do Qwen3 no Galaxy A01. Ainda é necessário importar um GGUF compatível e medir carregamento, memória, velocidade e estabilidade no aparelho. Em 2 GB de RAM, o modelo pode ser lento ou não caber na memória disponível.
+
+Consulte [docs/LLAMA_ARMV7_TESTE.md](docs/LLAMA_ARMV7_TESTE.md) e [docs/HISTORICO_IMPLEMENTACAO.md](docs/HISTORICO_IMPLEMENTACAO.md) para detalhes, limites e validações pendentes.
