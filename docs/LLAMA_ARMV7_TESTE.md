@@ -39,7 +39,7 @@ O build usa Android NDK/CMake pelo Android Gradle Plugin. Esta branch deve gerar
 
 - API nativa fixada em v0.9.0.
 - ARMv7 ainda não foi comprovado; podem ser necessárias correções no upstream ou no NDK.
-- O adaptador é experimental e recarrega/libera o modelo por chamada. A chamada deve ocorrer em thread de trabalho.
+- O adaptador mantém o modelo carregado em memória após a primeira carga; a importação de um novo arquivo descarrega o modelo anterior. A chamada deve ocorrer em thread de trabalho.
 - Importação do GGUF pela ação **MODELO** na interface; o arquivo é copiado para o armazenamento privado do app com nome fixo.
 - A interface informa se a biblioteca nativa está disponível e se o arquivo GGUF foi encontrado. Isso ainda não comprova inferência: é necessário testar uma resposta gerada pelo modelo.
 - Sem streaming, histórico de contexto ou cancelamento.
