@@ -4,7 +4,7 @@
 
 Branch de protótipo para testar llama.cpp no Galaxy A01 informado pelo usuário: Android 12, processo de 32 bits, ABI armeabi-v7a.
 
-<badge> no markup: Build ARMv7 concluído com sucesso no GitHub Actions em 2026-11-07 (run #72). O passo de verificação confirmou `lib/armeabi-v7a/libpuppy_llama.so` no APK e ausência de ABIs de 64 bits inesperadas. **Ainda não validado em aparelho nem por inferência real.** A compilação comprova o empacotamento nativo; não comprova que o modelo carrega ou gera texto no Galaxy A01.
+## Status de compilação\n\nBuild ARMv7 concluído com sucesso no GitHub Actions em 2026-11-07 (run #72). O passo de verificação confirmou `lib/armeabi-v7a/libpuppy_llama.so` no APK e ausência de ABIs de 64 bits inesperadas. **Ainda não validado em aparelho nem por inferência real.** A compilação comprova o empacotamento nativo; não comprova que o modelo carrega ou gera texto no Galaxy A01.
 
 ## Integração
 
