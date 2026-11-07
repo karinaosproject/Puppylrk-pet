@@ -21,7 +21,7 @@
 - As Skills atuais são baseadas em regras e oferecem recursos como clima, notícias, Wikipédia e diário; ainda não são um chatbot generativo.
 - A classe `Pet` e a rede neural comportamental `Brain` cuidam do comportamento/animação do mascote. Essa rede não é um LLM.
 - A integração do Qwen e do MNN **ainda não foi implementada**.
-- Não há confirmação de build ou teste de inferência no Galaxy A01 após as alterações de segurança. Esses testes continuam pendentes.
+- **Validação manual recente:** o usuário informou que atualizou/instalou o APK atual no Galaxy A01 e que ficou tudo certo. Isso confirma a validação prática relatada para a versão atual, mas não substitui testes automatizados ou medições de desempenho do futuro LLM.
 
 ## Decisão técnica
 
@@ -31,6 +31,22 @@
 - Runtime alternativo futuro: llama.cpp, caso os testes de compatibilidade, desempenho, tamanho ou manutenção indiquem vantagem.
 - O modelo deve ser baixado sob demanda; não embutir pesos grandes no APK.
 - O primeiro candidato para avaliação é Qwen3-0.6B, sujeito à verificação da licença e do formato/quantização exatos disponíveis para o runtime escolhido.
+
+## Pesquisa técnica inicial do MNN-LLM
+
+Consulta à documentação oficial do repositório MNN, especialmente o README do aplicativo Android MnnLlmChat:
+
+- A integração Android oficial constrói bibliotecas nativas com Android NDK; não é correto presumir que basta adicionar uma dependência Java/Gradle.
+- O README oficial consultado indica NDK `27.2.12479018` para o aplicativo de exemplo e mostra a compilação da biblioteca MNN antes da construção do app.
+- O exemplo de compilação consultado está orientado a `arm64-v8a`; precisamos verificar separadamente o suporte e a distribuição de bibliotecas para `armeabi-v7a` antes de decidir quais ABIs o Puppy vai empacotar.
+- A documentação oficial alerta que o aplicativo MNN Chat foi testado em aparelhos topo de linha (OnePlus 13 e Xiaomi 14 Ultra) e que aparelhos modestos podem ficar lentos, instáveis ou não conseguir carregar modelos.
+- O README registra suporte a Qwen3 no aplicativo MNN Chat a partir da versão 0.4.0. Isso comprova suporte da aplicação/ecossistema, mas ainda não comprova que um checkpoint específico Qwen3-0.6B em formato específico funciona no aparelho do usuário.
+- Ainda falta inspecionar e fixar uma versão/release do MNN e confirmar o caminho real de integração Java/JNI e o formato do modelo. Nenhuma API Java foi assumida ou implementada nesta etapa.
+
+Referências oficiais consultadas:
+- MNN Android LLM app: https://github.com/alibaba/MNN/blob/master/apps/Android/MnnLlmChat/README.md
+- MNN Android build workflow / NDK: https://github.com/alibaba/MNN/blob/master/.github/workflows/mnn_release.yml
+- MNN engine Android notes: https://github.com/alibaba/MNN/wiki/engine
 
 ## Restrição do aparelho de desenvolvimento
 
@@ -62,11 +78,12 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 
 ### Etapa 1 — Base e compatibilidade
 
-- [ ] Consultar a documentação e os exemplos oficiais atuais do MNN-LLM para Android/Java/JNI; não inventar APIs.
+- [ ] Fixar uma versão/release do MNN para evitar integração instável com a branch principal em movimento.
+- [ ] Inspecionar os exemplos e o código oficial do MNN-LLM para Android/Java/JNI; confirmar APIs reais antes de escrever o adaptador.
 - [ ] Confirmar requisitos de NDK, CMake, bibliotecas nativas, ABIs e versão mínima do Android.
+- [ ] Identificar as ABIs realmente disponíveis no Galaxy A01 e escolher a estratégia de empacotamento sem remover suporte existente sem justificativa.
 - [ ] Verificar a licença do checkpoint exato e a compatibilidade de formato/quantização com a versão do MNN.
 - [ ] Fazer um protótipo mínimo isolado para carregar o modelo e medir consumo de memória e desempenho no A01, antes de alterar o fluxo principal do chat.
-- [ ] Definir a estratégia de distribuição das bibliotecas nativas para `armeabi-v7a` e/ou `arm64-v8a`, sem remover suporte existente sem justificativa.
 
 ### Etapa 2 — Integração do motor local
 
@@ -106,4 +123,4 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 
 ## Observação sobre status
 
-As caixas de seleção acima representam trabalho pendente. Os itens da seção “Já implementado” descrevem alterações presentes no histórico do repositório, mas não substituem uma compilação e testes no aparelho. A próxima atividade técnica é validar a integração MNN-LLM em um protótipo pequeno antes de conectar o Qwen à interface principal.
+As caixas de seleção acima representam trabalho pendente. Os itens da seção “Já implementado” descrevem alterações presentes no histórico do repositório, mas não substituem uma compilação e testes no aparelho. A próxima atividade técnica é fixar uma versão do MNN e construir um protótipo isolado para validar as bibliotecas nativas e o carregamento do modelo.
