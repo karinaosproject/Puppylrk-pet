@@ -127,6 +127,7 @@ public class Conhecimento {
         try (InputStream in = abrir(feed)) {
             XmlPullParser xp = Xml.newPullParser();
             xp.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+            xp.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false);
             xp.setInput(in, null);
             boolean dentro = false;
             String tag = "", titulo = "", link = "";
