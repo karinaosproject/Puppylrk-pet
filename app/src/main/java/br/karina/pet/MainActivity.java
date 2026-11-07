@@ -1,21 +1,32 @@
 package br.karina.pet;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
+    private static final int FUNDO = Color.rgb(7, 11, 21);
+    private static final int PAINEL = Color.rgb(16, 24, 39);
+    private static final int TEXTO = Color.rgb(239, 245, 255);
+    private static final int SUAVE = Color.rgb(145, 163, 188);
+    private static final int AZUL = Color.rgb(76, 190, 255);
+
     private Pet pet;
     private PetView view;
-    private SharedPreferences sp;   // estado do pet
-    private SharedPreferences sk;   // conhecimento
-    private SharedPreferences sd;   // diário
+    private SharedPreferences sp, sk, sd;
     private TextView info;
     private ScrollView rolagem;
     private EditText entrada;
@@ -24,6 +35,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        getWindow().setStatusBarColor(FUNDO);
+        getWindow().setNavigationBarColor(FUNDO);
+
         sp = getSharedPreferences("pet", MODE_PRIVATE);
         sk = getSharedPreferences("conhecimento", MODE_PRIVATE);
         sd = getSharedPreferences("diario", MODE_PRIVATE);
@@ -32,52 +46,169 @@ public class MainActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.addView(view,
-                new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        root.setBackgroundColor(FUNDO);
+        root.setPadding(dp(18), dp(10), dp(18), dp(12));
 
-        info = new TextView(this);
-        info.setTextColor(0xFFB0B8C8);
-        info.setTextSize(13);
-        info.setPadding(24, 8, 24, 8);
-        info.setText("Fale com o Puppy. Tente: clima, notícias, aprender sobre <assunto> ou ajuda.");
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setPadding(0, dp(3), 0, dp(9));
+
+        LinearLayout identidade = new LinearLayout(this);
+        identidade.setOrientation(LinearLayout.VERTICAL);
+        identidade.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        TextView titulo = texto("PUPPY", 22, TEXTO, true);
+        titulo.setLetterSpacing(0.12f);
+        TextView subtitulo = texto("SEU COMPANHEIRO DIGITAL", 9, SUAVE, true);
+        subtitulo.setLetterSpacing(0.13f);
+        identidade.addView(titulo);
+        identidade.addView(subtitulo);
+        header.addView(identidade);
+
+        TextView status = texto("●  CÉREBRO LOCAL", 10, Color.rgb(104, 224, 181), true);
+        status.setLetterSpacing(0.04f);
+        status.setPadding(dp(10), dp(8), dp(10), dp(8));
+        status.setBackground(fundo(Color.rgb(17, 47, 47), dp(18), Color.rgb(35, 91, 83)));
+        header.addView(status);
+
+        TextView diario = texto("DIÁRIO  ↗", 10, AZUL, true);
+        diario.setGravity(Gravity.CENTER);
+        diario.setPadding(dp(12), dp(10), 0, dp(10));
+        diario.setOnClickListener(v -> mostrarDiario());
+        diario.setContentDescription("Abrir diário do Puppy");
+        diario.setFocusable(true);
+        header.addView(diario);
+        root.addView(header);
+
+        LinearLayout palco = new LinearLayout(this);
+        palco.setOrientation(LinearLayout.VERTICAL);
+        palco.setBackground(fundo(PAINEL, dp(25), Color.rgb(35, 51, 76)));
+        palco.setClipToOutline(true);
+        palco.addView(view, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        root.addView(palco, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        TextView rotulo = texto("SINAL DO PUPPY", 9, SUAVE, true);
+        rotulo.setLetterSpacing(0.14f);
+        rotulo.setPadding(dp(3), dp(12), dp(3), dp(5));
+        root.addView(rotulo);
+
         rolagem = new ScrollView(this);
-        rolagem.setBackgroundColor(0xFF10131E);
+        rolagem.setFillViewport(true);
+        rolagem.setVerticalScrollBarEnabled(false);
+        rolagem.setBackground(fundo(Color.rgb(14, 21, 34), dp(16), Color.rgb(31, 45, 66)));
+        info = texto("Oi! Eu sou o Puppy. Toque em mim para fazer carinho ou escolha uma ação abaixo. ✨", 13, TEXTO, false);
+        info.setGravity(Gravity.CENTER_VERTICAL);
+        info.setPadding(dp(14), dp(10), dp(14), dp(10));
         rolagem.addView(info);
-        int altura = (int) (getResources().getDisplayMetrics().density * 130);
-        root.addView(rolagem, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, altura));
+        root.addView(rolagem, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(76)));
 
-        LinearLayout linha = new LinearLayout(this);
-        linha.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout composer = new LinearLayout(this);
+        composer.setGravity(Gravity.CENTER_VERTICAL);
+        composer.setOrientation(LinearLayout.HORIZONTAL);
+        composer.setPadding(0, dp(9), 0, dp(8));
+
         entrada = new EditText(this);
-        entrada.setHint("Fale com o Puppy...");
         entrada.setSingleLine(true);
-        entrada.setTextColor(0xFFFFFFFF);
-        entrada.setHintTextColor(0xFF808898);
-        linha.addView(entrada, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2f));
-        linha.addView(botao("Enviar", () -> enviar()));
-        linha.addView(botao("Diário", () -> mostrarDiario()));
-        root.addView(linha, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        entrada.setTextSize(13);
+        entrada.setTextColor(TEXTO);
+        entrada.setHintTextColor(SUAVE);
+        entrada.setHint("Converse com o Puppy...");
+        entrada.setPadding(dp(14), 0, dp(10), 0);
+        entrada.setImeOptions(EditorInfo.IME_ACTION_SEND);
+        entrada.setBackground(fundo(Color.rgb(19, 29, 46), dp(15), Color.rgb(42, 59, 83)));
+        composer.addView(entrada, new LinearLayout.LayoutParams(0, dp(48), 1f));
 
-        LinearLayout barra = new LinearLayout(this);
-        barra.setOrientation(LinearLayout.HORIZONTAL);
-        barra.addView(botao("Carinho", () -> pet.carinho()));
-        barra.addView(botao("Comida", () -> pet.comer()));
-        barra.addView(botao("Brincar", () -> pet.brincar()));
-        barra.addView(botao("Bronca", () -> pet.bronca()));
-        root.addView(barra, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        TextView enviar = texto("ENVIAR  ↑", 10, Color.rgb(5, 17, 29), true);
+        enviar.setGravity(Gravity.CENTER);
+        enviar.setLetterSpacing(0.04f);
+        enviar.setBackground(fundo(AZUL, dp(14), AZUL));
+        LinearLayout.LayoutParams enviarLp = new LinearLayout.LayoutParams(dp(88), dp(48));
+        enviarLp.leftMargin = dp(8);
+        composer.addView(enviar, enviarLp);
+        enviar.setOnClickListener(v -> enviar());
+        entrada.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                enviar();
+                return true;
+            }
+            return false;
+        });
+        root.addView(composer);
+
+        LinearLayout acoes = new LinearLayout(this);
+        acoes.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout primeira = linhaAcoes();
+        adicionarAcao(primeira, "♡", "CARINHO", Color.rgb(255, 125, 174), () -> pet.carinho());
+        adicionarAcao(primeira, "✦", "COMIDA", Color.rgb(255, 190, 93), () -> pet.comer());
+        LinearLayout segunda = linhaAcoes();
+        adicionarAcao(segunda, "↗", "BRINCAR", Color.rgb(105, 207, 255), () -> pet.brincar());
+        adicionarAcao(segunda, "!", "BRONCA", Color.rgb(174, 157, 255), () -> pet.bronca());
+        acoes.addView(primeira);
+        LinearLayout.LayoutParams segundaLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(54));
+        segundaLp.topMargin = dp(7);
+        acoes.addView(segunda, segundaLp);
+        root.addView(acoes);
 
         setContentView(root);
     }
 
-    private Button botao(String texto, Runnable acao) {
-        Button bt = new Button(this);
-        bt.setText(texto);
-        bt.setAllCaps(false);
-        bt.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        bt.setOnClickListener(v -> acao.run());
-        return bt;
+    private LinearLayout linhaAcoes() {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(54)));
+        return row;
+    }
+
+    private void adicionarAcao(LinearLayout row, String simbolo, String nome, int cor, Runnable callback) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.HORIZONTAL);
+        card.setGravity(Gravity.CENTER);
+        card.setBackground(fundo(Color.rgb(17, 27, 43), dp(15), Color.rgb(37, 53, 75)));
+        card.setClickable(true);
+        card.setFocusable(true);
+        card.setOnClickListener(v -> callback.run());
+        card.setContentDescription(nome.toLowerCase() + " no Puppy");
+
+        TextView icone = texto(simbolo, 19, cor, true);
+        icone.setGravity(Gravity.CENTER);
+        TextView label = texto(nome, 10, TEXTO, true);
+        label.setLetterSpacing(0.05f);
+        LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        labelLp.leftMargin = dp(8);
+        card.addView(icone);
+        card.addView(label, labelLp);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(54), 1f);
+        if (row.getChildCount() > 0) lp.leftMargin = dp(7);
+        row.addView(card, lp);
+    }
+
+    private TextView texto(String valor, float tamanho, int cor, boolean negrito) {
+        TextView t = new TextView(this);
+        t.setText(valor);
+        t.setTextSize(tamanho);
+        t.setTextColor(cor);
+        if (negrito) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        return t;
+    }
+
+    private GradientDrawable fundo(int cor, int raio, int borda) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(cor);
+        d.setCornerRadius(raio);
+        d.setStroke(dp(1), borda);
+        return d;
+    }
+
+    private int dp(float valor) {
+        return (int) (valor * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     private void mostrarDiario() {
@@ -89,11 +220,13 @@ public class MainActivity extends Activity {
         final String cmd = entrada.getText().toString().trim();
         if (cmd.isEmpty()) return;
         entrada.setText("");
+        ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                .hideSoftInputFromWindow(entrada.getWindowToken(), 0);
         if (Skills.norm(cmd).equals("diario")) {
             mostrarDiario();
             return;
         }
-        info.setText("Pensando...");
+        info.setText("O Puppy está pensando...");
         new Thread(() -> {
             Skills.Resposta r = Skills.executar(cmd, sk);
             runOnUiThread(() -> {
