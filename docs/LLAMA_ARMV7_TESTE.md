@@ -40,7 +40,9 @@ O build usa Android NDK/CMake pelo Android Gradle Plugin. Esta branch deve gerar
 - API nativa fixada em v0.9.0.
 - ARMv7 ainda não foi comprovado; podem ser necessárias correções no upstream ou no NDK.
 - O adaptador é experimental e recarrega/libera o modelo por chamada. A chamada deve ocorrer em thread de trabalho.
-- Sem streaming, histórico de contexto, cancelamento, importação de modelos ou template específico Qwen3.
+- Importação do GGUF pela ação **MODELO** na interface; o arquivo é copiado para o armazenamento privado do app com nome fixo.
+- A interface informa se a biblioteca nativa está disponível e se o arquivo GGUF foi encontrado. Isso ainda não comprova inferência: é necessário testar uma resposta gerada pelo modelo.
+- Sem streaming, histórico de contexto ou cancelamento.
 - Nunca executar comandos ou código gerado. Ferramentas futuras exigem allowlist e confirmação para ações sensíveis.
 
 ## Referências
@@ -48,3 +50,14 @@ O build usa Android NDK/CMake pelo Android Gradle Plugin. Esta branch deve gerar
 - https://github.com/ggml-org/llama.cpp/blob/v0.9.0/docs/android.md
 - https://github.com/ggml-org/llama.cpp/blob/v0.9.0/include/llama.h
 - https://developer.android.com/ndk/guides/abis
+
+
+## Instalar o modelo no aparelho
+
+1. Obtenha um modelo **Qwen3 0.6B Instruct** em formato **GGUF**, quantização Q4_K_M, de uma fonte confiável.
+2. No Puppy, toque em **MODELO** no cabeçalho.
+3. Selecione o arquivo `.gguf` no seletor de arquivos do Android e aguarde a cópia.
+4. O status deve mudar para **Qwen3 GGUF encontrado · ainda não testado**.
+5. Envie uma pergunta aberta, por exemplo: "Explique em duas frases por que o céu é azul". Uma resposta não relacionada às Skills é o primeiro sinal de inferência, mas a confirmação técnica exige logs nativos e validação de saída.
+
+O aplicativo não baixa modelos automaticamente. O arquivo é grande e a importação exige espaço livre adicional temporário. Em aparelho com 2 GB de RAM, carregamento pode falhar por falta de memória; mantenha apps em segundo plano fechados durante o primeiro teste.
