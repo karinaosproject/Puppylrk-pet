@@ -34,11 +34,15 @@ public final class LlamaRuntime {
             loadedModelPath = model.getAbsolutePath();
         }
         try {
-            String system = "Você é Puppy, um assistente pessoal útil, claro e seguro. Responda em português brasileiro. Não afirme que executou ações externas.\n";
+            String system = "Você é Puppy, um assistente pessoal útil, claro e seguro. " +
+                    "REGRA DE IDIOMA: responda exclusivamente em português brasileiro (pt-BR), " +
+                    "mesmo que a pergunta esteja em outro idioma. Não escreva em inglês. " +
+                    "Use linguagem natural, simples e direta. Não afirme que executou ações externas. " +
+                    "/no_think\n";
             String chat = "<|im_start|>system\n" + system + "<|im_end|>\n"
-                    + "<|im_start|>user\n" + prompt + "<|im_end|>\n"
+                    + "<|im_start|>user\n" + prompt + "\nResponda em português brasileiro." + "<|im_end|>\n"
                     + "<|im_start|>assistant\n";
-            return nativeGenerate(chat, 64);
+            return nativeGenerate(chat, 96);
         } catch (OutOfMemoryError | RuntimeException error) {
             return null;
         }
