@@ -1,10 +1,10 @@
 # Validação de compatibilidade — MNN-LLM no Galaxy A01
 
-**Status:** pesquisa documental concluída; compilação nativa, ABI real do aparelho e inferência ainda não validadas.
+**Status:** pesquisa documental concluída; ABI de 32 bits do sistema confirmada por Termux; compilação nativa e inferência ainda não validadas.
 
 ## Resumo executivo
 
-O Galaxy A01 SM-A015M é um aparelho de entrada com Snapdragon 439 e cerca de 2 GB de RAM. A ficha consultada informa CPU ARMv8-A, mas uma base de catálogo de dispositivos Android indica `armeabi-v7a` como ABI primária para a família Galaxy A01. Isso não basta para determinar a ABI do processo Android em que o Puppy está rodando: é necessário ler as propriedades do aparelho ou instrumentar o próprio app.
+O Galaxy A01 SM-A015M é um aparelho de entrada com Snapdragon 439 e cerca de 2 GB de RAM. O usuário executou os comandos no Termux e informou estes resultados: `ro.product.cpu.abilist=armeabi-v7a,armeabi`; `ro.product.cpu.abilist32=armeabi-v7a,armeabi`; `ro.product.cpu.abilist64` vazio/não informado; `ro.zygote=zygote32`; `ro.product.cpu.abi=armeabi-v7a`; `ro.build.version.sdk=32` (Android 12). Portanto, para este firmware, devemos tratar o Galaxy A01 como ambiente Android de 32 bits e exigir que o Puppy continue funcionando em `armeabi-v7a`. Não contar com a instalação de bibliotecas `arm64-v8a` neste aparelho.
 
 O exemplo oficial MNN Chat para Android **não pode ser copiado diretamente para o Puppy**:
 - O `app/build.gradle` atual do exemplo fixa `abiFilters "arm64-v8a"`.
@@ -41,11 +41,22 @@ getprop ro.zygote
 getprop ro.build.version.sdk
 ```
 
+Resultados recebidos do usuário:
+
+```text
+ro.product.cpu.abilist     = armeabi-v7a,armeabi
+ro.product.cpu.abilist32  = armeabi-v7a,armeabi
+ro.product.cpu.abilist64  = (vazio/não informado)
+ro.zygote                 = zygote32
+ro.product.cpu.abi        = armeabi-v7a
+ro.build.version.sdk      = 32
+```
+
 Interpretação:
-- Se `abilist` incluir `arm64-v8a`, o sistema suporta aplicações ARM64.
-- Se o app estiver executando como processo de 32 bits, ele precisará de bibliotecas `armeabi-v7a`, mesmo que a CPU seja capaz de ARM64.
-- O APK do Puppy atual não inclui bibliotecas nativas, então ainda pode instalar em dispositivos 32/64 bits.
-- Não alterar `abiFilters` até conhecer a ABI de execução pretendida e termos bibliotecas compatíveis para ela.
+- O sistema instalado anuncia somente ABIs ARM de 32 bits e usa `zygote32`.
+- O APK atual do Puppy não inclui bibliotecas nativas, então seu código Java permanece independente de ABI.
+- A arquitetura do produto passa a exigir suporte tanto a `armeabi-v7a` quanto a `arm64-v8a`, em builds nativas separadas. A versão 32-bit é obrigatória e deve ser testada no Galaxy A01; a versão 64-bit será testada em outro dispositivo Android compatível.
+- Não colocar bibliotecas 64-bit na variante 32-bit nem configurar `abiFilters` que excluam `armeabi-v7a`.
 
 Para diagnosticar a ABI do processo do Puppy com precisão numa futura build de diagnóstico, registrar `System.getProperty("os.arch")` e `android.os.Process.is64Bit()` (API 23+), sem enviar identificadores pessoais.
 
@@ -72,4 +83,4 @@ Para diagnosticar a ABI do processo do Puppy com precisão numa futura build de 
 
 ## Limitações atuais
 
-Não foi possível executar compilação NDK/CMake, instalar APK, consultar propriedades ADB ou medir memória/temperatura do telefone a partir da conexão GitHub. Nenhum arquivo nativo ou dependência MNN foi adicionado ao app nesta fase. A próxima decisão depende do diagnóstico de ABI e de uma build nativa reproduzível; não declarar Qwen funcional até passar nos critérios acima.
+A ABI do sistema foi informada pelo usuário via Termux, mas não houve compilação NDK/CMake, instalação de APK nativo, inferência real nem medição de memória/temperatura. Nenhum arquivo nativo ou dependência MNN foi adicionado ao app nesta fase. O suporte de 32 bits é requisito obrigatório, mas ainda precisa ser provado para o runtime LLM; se a inferência não for viável no A01, o app continuará funcional em 32 bits com as Skills existentes. O suporte de 64 bits será entregue em variante própria e não substituirá o caminho de 32 bits. Não declarar Qwen funcional até passar nos critérios acima.
