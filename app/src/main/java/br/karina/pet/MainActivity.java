@@ -20,11 +20,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
-    private static final int FUNDO = Color.rgb(7, 11, 21);
-    private static final int PAINEL = Color.rgb(16, 24, 39);
+    private static final int FUNDO = Color.rgb(5, 9, 20);
+    private static final int PAINEL = Color.rgb(13, 22, 42);
     private static final int TEXTO = Color.rgb(239, 245, 255);
     private static final int SUAVE = Color.rgb(145, 163, 188);
-    private static final int AZUL = Color.rgb(76, 190, 255);
+    private static final int AZUL = Color.rgb(100, 220, 255);
 
     private Pet pet;
     private PetView view;
@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
-        getWindow().setStatusBarColor(FUNDO);
+        getWindow().setStatusBarColor(Color.rgb(5, 9, 20));
         getWindow().setNavigationBarColor(FUNDO);
 
         sp = getSharedPreferences("pet", MODE_PRIVATE);
@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(FUNDO);
+        root.setBackground(gradiente(new int[]{Color.rgb(5, 9, 20), Color.rgb(10, 17, 37), Color.rgb(7, 10, 24)}, 0));
         root.setPadding(dp(18), dp(10), dp(18), dp(12));
 
         LinearLayout header = new LinearLayout(this);
@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
         TextView status = texto("●  CÉREBRO LOCAL", 10, Color.rgb(104, 224, 181), true);
         status.setLetterSpacing(0.04f);
         status.setPadding(dp(10), dp(8), dp(10), dp(8));
-        status.setBackground(fundo(Color.rgb(17, 47, 47), dp(18), Color.rgb(35, 91, 83)));
+        status.setBackground(vidro(Color.argb(150, 16, 65, 67), dp(18), Color.argb(170, 65, 211, 190)));
         header.addView(status);
 
         TextView diario = texto("DIÁRIO  ↗", 10, AZUL, true);
@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
 
         LinearLayout palco = new LinearLayout(this);
         palco.setOrientation(LinearLayout.VERTICAL);
-        palco.setBackground(fundo(PAINEL, dp(25), Color.rgb(35, 51, 76)));
+        palco.setBackground(gradiente(new int[]{Color.argb(220, 25, 42, 73), Color.argb(205, 13, 22, 43), Color.argb(230, 25, 24, 57)}, dp(25)));\n        palco.setElevation(dp(8));
         palco.setClipToOutline(true);
         palco.addView(view, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
         rolagem = new ScrollView(this);
         rolagem.setFillViewport(true);
         rolagem.setVerticalScrollBarEnabled(false);
-        rolagem.setBackground(fundo(Color.rgb(14, 21, 34), dp(16), Color.rgb(31, 45, 66)));
+        rolagem.setBackground(vidro(Color.argb(175, 18, 29, 53), dp(16), Color.argb(150, 92, 143, 194)));
         info = texto("Oi! Eu sou o Puppy. Toque em mim para fazer carinho ou escolha uma ação abaixo. ✨", 13, TEXTO, false);
         info.setGravity(Gravity.CENTER_VERTICAL);
         info.setPadding(dp(14), dp(10), dp(14), dp(10));
@@ -132,13 +132,13 @@ public class MainActivity extends Activity {
         entrada.setHint("Converse com o Puppy...");
         entrada.setPadding(dp(14), 0, dp(10), 0);
         entrada.setImeOptions(EditorInfo.IME_ACTION_SEND);
-        entrada.setBackground(fundo(Color.rgb(19, 29, 46), dp(15), Color.rgb(42, 59, 83)));
+        entrada.setBackground(vidro(Color.argb(205, 19, 31, 57), dp(15), Color.argb(180, 88, 153, 211)));
         composer.addView(entrada, new LinearLayout.LayoutParams(0, dp(48), 1f));
 
         TextView enviar = texto("ENVIAR  ↑", 10, Color.rgb(5, 17, 29), true);
         enviar.setGravity(Gravity.CENTER);
         enviar.setLetterSpacing(0.04f);
-        enviar.setBackground(fundo(AZUL, dp(14), AZUL));
+        enviar.setBackground(gradiente(new int[]{Color.rgb(124, 232, 255), Color.rgb(84, 177, 255)}, dp(14)));\n        enviar.setElevation(dp(5));
         LinearLayout.LayoutParams enviarLp = new LinearLayout.LayoutParams(dp(88), dp(48));
         enviarLp.leftMargin = dp(8);
         composer.addView(enviar, enviarLp);
@@ -183,7 +183,7 @@ public class MainActivity extends Activity {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.HORIZONTAL);
         card.setGravity(Gravity.CENTER);
-        card.setBackground(fundo(Color.rgb(17, 27, 43), dp(15), Color.rgb(37, 53, 75)));
+        card.setBackground(vidro(Color.argb(175, 22, 34, 60), dp(15), Color.argb(170, 78, 126, 174)));
         card.setClickable(true);
         card.setFocusable(true);
         card.setOnClickListener(v -> callback.run());
@@ -213,7 +213,7 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private GradientDrawable fundo(int cor, int raio, int borda) {
+    private GradientDrawable vidro(int cor, int raio, int borda) {\n        GradientDrawable d = new GradientDrawable();\n        d.setColor(cor);\n        d.setCornerRadius(raio);\n        d.setStroke(dp(1), borda);\n        return d;\n    }\n\n    private GradientDrawable gradiente(int[] cores, int raio) {\n        GradientDrawable d = new GradientDrawable(GradientDrawable.Orientation.TL_BR, cores);\n        d.setCornerRadius(raio);\n        d.setStroke(dp(1), Color.argb(125, 121, 171, 225));\n        return d;\n    }\n\n    private GradientDrawable fundo(int cor, int raio, int borda) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(cor);
         d.setCornerRadius(raio);
