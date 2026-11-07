@@ -8,32 +8,92 @@ import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.BufferedReader;
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-/** Busca conhecimento em fontes abertas e guarda no celular. */
+/** Busca conhecimento apenas em fontes públicas explicitamente autorizadas. */
 public class Conhecimento {
-    // Troque ou acrescente feeds aqui. Se algum parar de funcionar, o app avisa na tela.
     public static final String[] FEEDS = {
             "https://feeds.bbci.co.uk/portuguese/rss.xml",
             "https://g1.globo.com/rss/g1/"
     };
 
-    private static InputStream abrir(String u) throws Exception {
-        HttpURLConnection con = (HttpURLConnection) new URL(u).openConnection();
-        con.setConnectTimeout(10000);
-        con.setReadTimeout(15000);
-        con.setRequestProperty("User-Agent", "Puppy/0.1 (app pessoal Android)");
-        if (con.getResponseCode() != 200) throw new Exception("HTTP " + con.getResponseCode());
-        return con.getInputStream();
+    private static final int MAX_RESPOSTA_BYTES = 1024 * 1024;
+    private static final Set<String> HOSTS_PERMITIDOS = new HashSet<>(Arrays.asList(
+            "feeds.bbci.co.uk",
+            "g1.globo.com",
+            "geocoding-api.open-meteo.com",
+            "api.open-meteo.com",
+            "pt.wikipedia.org"
+    ));
+
+    /** Impede HTTP, hosts arbitrários, portas alternativas e redirecionamentos. */
+    private static InputStream abrir(String endereco) throws Exception {
+        if (endereco == null || endereco.length() > 2048) {
+            throw new SecurityException("Endereço inválido");
+        }
+        URL url = new URL(endereco);
+        String host = url.getHost() == null ? "" : url.getHost().toLowerCase(java.util.Locale.ROOT);
+        if (!"https".equalsIgnoreCase(url.getProtocol())
+                || !HOSTS_PERMITIDOS.contains(host)
+                || url.getUserInfo() != null
+                || (url.getPort() != -1 && url.getPort() != 443)) {
+            throw new SecurityException("Destino de rede não permitido");
+        }
+
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
+        con.setInstanceFollowRedirects(false);
+        con.setConnectTimeout(5000);
+        con.setReadTimeout(8000);
+        con.setUseCaches(false);
+        con.setRequestProperty("User-Agent", "Puppy/0.2 (Android; consultas públicas)");
+        con.setRequestProperty("Accept", "application/json, application/rss+xml, application/xml, text/xml");
+        int status = con.getResponseCode();
+        if (status != HttpURLConnection.HTTP_OK) {
+            con.disconnect();
+            throw new IOException("Consulta recusada");
+        }
+        long tamanho = con.getContentLengthLong();
+        if (tamanho > MAX_RESPOSTA_BYTES) {
+            con.disconnect();
+            throw new IOException("Resposta muito grande");
+        }
+        return new LimiteInputStream(con.getInputStream(), MAX_RESPOSTA_BYTES);
     }
 
-     static String texto(String u) throws Exception {
+    /** Limita também respostas sem Content-Length (transferência em blocos). */
+    private static class LimiteInputStream extends FilterInputStream {
+        private long restante;
+        LimiteInputStream(InputStream in, long limite) {
+            super(in);
+            restante = limite;
+        }
+        @Override public int read() throws IOException {
+            if (restante <= 0) throw new IOException("Limite de resposta excedido");
+            int valor = super.read();
+            if (valor != -1) restante--;
+            return valor;
+        }
+        @Override public int read(byte[] b, int off, int len) throws IOException {
+            if (restante <= 0) throw new IOException("Limite de resposta excedido");
+            int lido = super.read(b, off, (int) Math.min(len, restante));
+            if (lido > 0) restante -= lido;
+            return lido;
+        }
+    }
+
+    static String texto(String u) throws Exception {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(abrir(u), "UTF-8"))) {
             StringBuilder sb = new StringBuilder();
             String l;
@@ -42,7 +102,7 @@ public class Conhecimento {
         }
     }
 
-    /** Pesquisa um assunto na Wikipédia (CC BY-SA). Devolve {titulo, texto, url} ou null. */
+    /** Pesquisa um assunto na Wikipédia (CC BY-SA). */
     public static String[] wikipedia(String termo) throws Exception {
         String q = URLEncoder.encode(termo, "UTF-8");
         JSONArray busca = new JSONArray(texto(
@@ -60,11 +120,13 @@ public class Conhecimento {
         return new String[]{r.optString("title", titulo), r.optString("extract", ""), url};
     }
 
-    /** Lê um feed RSS e devolve até n itens {titulo, link}. */
+    /** Lê até n itens de um feed previamente autorizado. */
     public static List<String[]> manchetes(String feed, int n) throws Exception {
+        if (n < 1 || n > 10) throw new IllegalArgumentException("Quantidade inválida");
         List<String[]> out = new ArrayList<>();
         try (InputStream in = abrir(feed)) {
             XmlPullParser xp = Xml.newPullParser();
+            xp.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             xp.setInput(in, null);
             boolean dentro = false;
             String tag = "", titulo = "", link = "";
@@ -78,8 +140,8 @@ public class Conhecimento {
                         link = "";
                     }
                 } else if (ev == XmlPullParser.TEXT && dentro) {
-                    if ("title".equals(tag)) titulo += xp.getText();
-                    else if ("link".equals(tag)) link += xp.getText();
+                    if ("title".equals(tag) && titulo.length() < 500) titulo += xp.getText();
+                    else if ("link".equals(tag) && link.length() < 1000) link += xp.getText();
                 } else if (ev == XmlPullParser.END_TAG) {
                     if ("item".equals(xp.getName())) {
                         dentro = false;
@@ -112,7 +174,7 @@ public class Conhecimento {
             for (int i = 0; i < arr.length() && novo.length() < 300; i++) novo.put(arr.get(i));
             sp.edit().putString("itens", novo.toString()).apply();
         } catch (Exception ignored) {
-            // se der erro ao guardar, só não guarda
+            // Se o conteúdo recebido estiver inválido, não interrompe o app.
         }
     }
 }
