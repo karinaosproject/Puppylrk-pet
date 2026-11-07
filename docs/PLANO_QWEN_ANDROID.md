@@ -1,5 +1,28 @@
 # Arquitetura de IA local do Puppy — Qwen
 
+> Documento de acompanhamento: distingue o que já existe no repositório, o que foi decidido e o que ainda será implementado. Uma decisão ou plano não significa que o recurso já esteja funcionando.
+
+## Estado atual do projeto
+
+### Já implementado no repositório
+
+- **Interface do Puppy:** tema escuro tecnológico, cabeçalho, indicador de cérebro local, painel do mascote, campo de mensagem e controles de interação. Commit de referência: `5d66767c77dbfcb7e538102cf2b3daa7f4d465dc`.
+- **Manifesto Android reforçado:** backup desativado e tráfego HTTP em texto claro desativado; a permissão de Internet foi mantida para os recursos de consulta. Commit: `47a32de84e9e20c0bab9b0ea3ae9c397f5e9ae7b`.
+- **Validação das entradas das Skills:** limite de 200 caracteres, validação de comandos e limites para cidade/assunto, tratamento de entrada nula e mensagens de erro genéricas. Commit: `01f62416758452a5c3e29c6b39e0c018726764d8`.
+- **Consultas externas restringidas:** HTTPS, hosts permitidos, sem portas ou credenciais arbitrárias, redirecionamentos bloqueados, timeouts, limite de resposta e limite de itens RSS. Commit: `0356052751edb04473ee3e54158da17d87701b1e`.
+- **Parser XML endurecido:** processamento de declarações de documento externo desativado. Commit: `59fcaf89bebcd07a3540de60a4a6f6c9869fcab8`.
+- **Plano de arquitetura Qwen/MNN documentado:** commit inicial do documento: `8391d55d3981143bc37c75031943e5c02a8b5cd3`.
+
+### Funcionamento atual conhecido
+
+- Aplicativo Android nativo em Java 17.
+- Android Gradle Plugin 8.7.3, compileSdk 34, minSdk 26 e targetSdk 34.
+- A tela envia o texto para as Skills em uma thread de trabalho.
+- As Skills atuais são baseadas em regras e oferecem recursos como clima, notícias, Wikipédia e diário; ainda não são um chatbot generativo.
+- A classe `Pet` e a rede neural comportamental `Brain` cuidam do comportamento/animação do mascote. Essa rede não é um LLM.
+- A integração do Qwen e do MNN **ainda não foi implementada**.
+- Não há confirmação de build ou teste de inferência no Galaxy A01 após as alterações de segurança. Esses testes continuam pendentes.
+
 ## Decisão técnica
 
 - Modelo principal planejado: família Qwen3.
@@ -7,12 +30,13 @@
 - Runtime inicial a avaliar: MNN-LLM (Apache-2.0), que possui suporte a Qwen3 e integração Android.
 - Runtime alternativo futuro: llama.cpp, caso os testes de compatibilidade, desempenho, tamanho ou manutenção indiquem vantagem.
 - O modelo deve ser baixado sob demanda; não embutir pesos grandes no APK.
+- O primeiro candidato para avaliação é Qwen3-0.6B, sujeito à verificação da licença e do formato/quantização exatos disponíveis para o runtime escolhido.
 
 ## Restrição do aparelho de desenvolvimento
 
 O aparelho de referência é um Samsung Galaxy A01 (Android 12, ARM, hardware de entrada). A documentação do aplicativo Android do MNN alerta que seus testes foram feitos em aparelhos topo de linha e que dispositivos modestos podem apresentar lentidão, instabilidade ou falha ao carregar modelos.
 
-Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor checkpoint Qwen3 disponível que tenha licença explicitamente compatível (avaliar primeiro Qwen3-0.6B), preferir quantização suportada pelo runtime e medir memória, tempo de carregamento, velocidade de geração, temperatura e estabilidade. Se o modelo não couber ou ficar inutilizável, manter o Puppy funcional sem LLM e oferecer a execução local em aparelho mais potente como opção futura. Não prometer desempenho antes de testar no aparelho real.
+Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor checkpoint Qwen3 disponível que tenha licença explicitamente compatível, preferir quantização suportada pelo runtime e medir memória, tempo de carregamento, velocidade de geração, temperatura e estabilidade. Se o modelo não couber ou ficar inutilizável, manter o Puppy funcional sem LLM e oferecer a execução local em aparelho mais potente como opção futura. Não prometer desempenho antes de testar no aparelho real.
 
 ## Arquitetura planejada
 
@@ -32,37 +56,54 @@ Portanto, não presumir que qualquer Qwen3 rode no A01. Começar com o menor che
 - Saídas do modelo são dados não confiáveis: nunca executar código, comandos ou links automaticamente.
 - A memória é local e não deve armazenar senhas, tokens ou segredos.
 - A rede neural comportamental atual do pet permanece separada do LLM: ela controla personalidade/animação, não permissões nem ferramentas.
+- Não prometer segurança absoluta: cada nova ferramenta e integração precisa de revisão e testes próprios.
 
-## Etapas de implementação
+## Próximas mudanças planejadas
 
 ### Etapa 1 — Base e compatibilidade
-- Criar interface do motor de linguagem e contratos de mensagens/respostas.
-- Verificar a licença do checkpoint exato e a compatibilidade com MNN.
-- Preparar build Android com suporte nativo apenas para ABIs realmente necessárias.
-- Testar um protótipo mínimo antes de integrar ao chat.
 
-### Etapa 2 — Qwen local
-- Integrar MNN-LLM e permitir baixar/remover o modelo sob demanda.
-- Exibir estado do modelo: não instalado, baixando, pronto, carregando ou indisponível.
-- Executar inferência fora da thread de UI, com cancelamento e limites de tokens/tempo.
-- Manter as skills atuais como fallback se o modelo não estiver disponível.
+- [ ] Consultar a documentação e os exemplos oficiais atuais do MNN-LLM para Android/Java/JNI; não inventar APIs.
+- [ ] Confirmar requisitos de NDK, CMake, bibliotecas nativas, ABIs e versão mínima do Android.
+- [ ] Verificar a licença do checkpoint exato e a compatibilidade de formato/quantização com a versão do MNN.
+- [ ] Fazer um protótipo mínimo isolado para carregar o modelo e medir consumo de memória e desempenho no A01, antes de alterar o fluxo principal do chat.
+- [ ] Definir a estratégia de distribuição das bibliotecas nativas para `armeabi-v7a` e/ou `arm64-v8a`, sem remover suporte existente sem justificativa.
+
+### Etapa 2 — Integração do motor local
+
+- [ ] Criar a interface `AssistantEngine` e contratos de mensagens/respostas.
+- [ ] Implementar `QwenMnnEngine` somente depois de confirmar as APIs reais do runtime.
+- [ ] Permitir baixar, verificar, remover e atualizar o modelo sob demanda, com origem e integridade verificáveis.
+- [ ] Exibir estado do modelo: não instalado, baixando, pronto, carregando ou indisponível.
+- [ ] Executar inferência fora da thread de UI, com cancelamento e limites de tokens/tempo.
+- [ ] Manter as Skills atuais como fallback se o modelo não estiver disponível ou falhar.
 
 ### Etapa 3 — Ferramentas e agentes
-- Converter skills existentes em ferramentas com contratos tipados.
-- Permitir que Qwen proponha chamadas de ferramenta, mas executar apenas após validação local.
-- Implementar planejamento em etapas e verificação de resultados.
+
+- [ ] Criar `ToolRegistry` com contratos tipados e allowlist.
+- [ ] Converter as Skills existentes em ferramentas sem perder suas validações.
+- [ ] Permitir que Qwen proponha chamadas de ferramenta, mas executar apenas após validação local.
+- [ ] Implementar planejamento em etapas e verificação de resultados.
+- [ ] Adicionar ações Android gradualmente, com permissões mínimas e confirmação para operações sensíveis.
 
 ### Etapa 4 — Memória e autonomia limitada
-- Adicionar memória local controlável.
-- Implementar histórico resumido e contexto por tarefa.
-- Exigir confirmação humana para ações sensíveis.
+
+- [ ] Criar `MemoryStore` local, com opções para consultar e apagar dados.
+- [ ] Implementar histórico resumido e contexto por tarefa.
+- [ ] Não guardar credenciais, tokens ou segredos.
+- [ ] Exigir confirmação humana para ações sensíveis e informar claramente o que será executado.
 
 ## Critérios mínimos antes de considerar concluído
 
-- APK compila para as ABIs selecionadas.
-- App abre e continua funcionando sem modelo baixado.
-- Inferência não bloqueia a interface.
-- Falha de carregamento não fecha o app.
-- Ferramentas rejeitam argumentos inválidos e ações não autorizadas.
-- Teste de desempenho real no Galaxy A01, sem afirmar suporte se não passar.
-- Licenças do runtime, dependências e checkpoint ficam documentadas.
+- [ ] APK compila para as ABIs selecionadas.
+- [ ] App abre e continua funcionando sem modelo baixado.
+- [ ] Inferência não bloqueia a interface.
+- [ ] Falha de carregamento não fecha o app.
+- [ ] Ferramentas rejeitam argumentos inválidos e ações não autorizadas.
+- [ ] Downloads do modelo têm verificação de integridade e tratamento de falhas.
+- [ ] Teste de desempenho real no Galaxy A01, sem afirmar suporte se não passar.
+- [ ] Licenças do runtime, dependências e checkpoint ficam documentadas.
+- [ ] Build e testes automatizados executados e resultados registrados.
+
+## Observação sobre status
+
+As caixas de seleção acima representam trabalho pendente. Os itens da seção “Já implementado” descrevem alterações presentes no histórico do repositório, mas não substituem uma compilação e testes no aparelho. A próxima atividade técnica é validar a integração MNN-LLM em um protótipo pequeno antes de conectar o Qwen à interface principal.
