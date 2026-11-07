@@ -58,6 +58,11 @@ public final class LlamaRuntime {
         if (!dir.exists() && !dir.mkdirs()) throw new java.io.IOException("Não foi possível criar a pasta de modelos.");
         File destino = new File(dir, MODEL_FILE);
         File temporario = new File(dir, MODEL_FILE + ".tmp");
+        // Libera mmap/contexto antes de substituir um modelo já carregado.
+        if (loadedModelPath != null) {
+            nativeUnload();
+            loadedModelPath = null;
+        }
         long total = 0L;
         try (InputStream in = context.getContentResolver().openInputStream(uri);
              FileOutputStream out = new FileOutputStream(temporario)) {
@@ -84,10 +89,6 @@ public final class LlamaRuntime {
         if (!temporario.renameTo(destino)) {
             temporario.delete();
             throw new java.io.IOException("Não foi possível finalizar a instalação do modelo.");
-        }
-        if (loadedModelPath != null && !loadedModelPath.equals(destino.getAbsolutePath())) {
-            nativeUnload();
-            loadedModelPath = null;
         }
     }
 
